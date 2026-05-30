@@ -12,7 +12,14 @@ import {
 } from 'react-icons/ri';
 import { buildTrackerAnalytics } from '@/lib/tracker/analytics';
 import { syncTrackerData } from '@/lib/tracker/providers';
-import type { ContestRecord, OjSubmission, TrackerAccounts, TrackerSnapshot, TrackerSourceStatus } from '@/lib/tracker/types';
+import type {
+  ContestRecord,
+  OjSubmission,
+  TrackerAccounts,
+  TrackerAnalytics,
+  TrackerSnapshot,
+  TrackerSourceStatus,
+} from '@/lib/tracker/types';
 
 const ACCOUNT_STORAGE_KEY = 'ojblog:tracker:accounts';
 const SNAPSHOT_STORAGE_KEY = 'ojblog:tracker:snapshot';
@@ -45,9 +52,9 @@ function sourceClass(status: TrackerSourceStatus['status']) {
 
 function loadJson<T>(key: string): T | null {
   if (typeof window === 'undefined') return null;
-  const raw = window.localStorage.getItem(key);
-  if (!raw) return null;
   try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
     return JSON.parse(raw) as T;
   } catch {
     return null;
@@ -56,7 +63,52 @@ function loadJson<T>(key: string): T | null {
 
 function saveJson(key: string, value: unknown) {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(key, JSON.stringify(value));
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Storage may be disabled in privacy modes; the live UI can still work without persistence.
+  }
+}
+
+function removeStoredJson(key: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Ignore storage failures; they should never break rendering.
+  }
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isTrackerAccounts(value: unknown): value is TrackerAccounts {
+  if (!isObject(value)) return false;
+  const { codeforces, atcoder } = value;
+  return (
+    (codeforces === undefined || typeof codeforces === 'string') &&
+    (atcoder === undefined || typeof atcoder === 'string')
+  );
+}
+
+function isTrackerSnapshot(value: unknown): value is TrackerSnapshot {
+  if (!isObject(value)) return false;
+  if (typeof value.fetchedAt !== 'string') return false;
+  if (!isTrackerAccounts(value.accounts)) return false;
+  if (!Array.isArray(value.submissions)) return false;
+  if (!Array.isArray(value.contests)) return false;
+  if (!Array.isArray(value.sources)) return false;
+  return !Number.isNaN(Date.parse(value.fetchedAt));
+}
+
+function safeBuildTrackerAnalytics(snapshot: TrackerSnapshot | null): TrackerAnalytics | null {
+  if (!snapshot) return null;
+  try {
+    return buildTrackerAnalytics(snapshot);
+  } catch {
+    return null;
+  }
 }
 
 function normalizeAccounts(accounts: TrackerAccounts): TrackerAccounts {
@@ -155,11 +207,17 @@ export default function OjTrackerApp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const analytics = useMemo(() => (snapshot ? buildTrackerAnalytics(snapshot) : null), [snapshot]);
+  const analytics = useMemo(() => safeBuildTrackerAnalytics(snapshot), [snapshot]);
 
   useEffect(() => {
-    const savedAccounts = loadJson<TrackerAccounts>(ACCOUNT_STORAGE_KEY);
-    const savedSnapshot = loadJson<TrackerSnapshot>(SNAPSHOT_STORAGE_KEY);
+    const storedAccounts = loadJson<unknown>(ACCOUNT_STORAGE_KEY);
+    const storedSnapshot = loadJson<unknown>(SNAPSHOT_STORAGE_KEY);
+    const savedAccounts = isTrackerAccounts(storedAccounts) ? storedAccounts : null;
+    const savedSnapshot = isTrackerSnapshot(storedSnapshot) ? storedSnapshot : null;
+
+    if (storedAccounts && !savedAccounts) removeStoredJson(ACCOUNT_STORAGE_KEY);
+    if (storedSnapshot && !savedSnapshot) removeStoredJson(SNAPSHOT_STORAGE_KEY);
+
     if (savedAccounts) setAccounts(savedAccounts);
     if (savedSnapshot) setSnapshot(savedSnapshot);
 
@@ -187,6 +245,9 @@ export default function OjTrackerApp() {
 
     try {
       const nextSnapshot = await syncTrackerData(normalized);
+      if (!isTrackerSnapshot(nextSnapshot)) {
+        throw new Error('同步结果格式异常，请稍后重试。');
+      }
       setSnapshot(nextSnapshot);
       saveJson(SNAPSHOT_STORAGE_KEY, nextSnapshot);
 
