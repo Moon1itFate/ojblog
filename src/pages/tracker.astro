@@ -1,0 +1,582 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { CONTENT_PADDING } from '@constants/layout';
+import { siteConfig } from '@constants/site-config';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { Icon } from 'astro-icon/components';
+
+const title = `刷题追踪 | ${siteConfig.title}`;
+const description = '整合 OJ 平台刷题记录、错题数据库、AI 弱点分析与算法比赛日程。';
+
+const platformSources = [
+  { name: 'Codeforces', status: 'API 可接入', solved: 186, color: '#ff7eb8' },
+  { name: 'AtCoder', status: 'API 可接入', solved: 74, color: '#80d8ff' },
+  { name: 'LeetCode', status: '账号同步规划', solved: 121, color: '#c9a6ff' },
+  { name: '洛谷', status: '半自动导入', solved: 58, color: '#ffb7d5' },
+  { name: '牛客', status: '比赛记录导入', solved: 39, color: '#8ce8f0' },
+  { name: 'vJudge', status: '补题集合规划', solved: 42, color: '#e8c4ff' },
+];
+
+const activityDays = Array.from({ length: 98 }, (_, index) => {
+  const wave = Math.sin(index * 0.58) + Math.cos(index * 0.21);
+  const wrong = index % 11 === 0 || index % 17 === 0;
+  const solved = Math.max(0, Math.round((wave + 1.6) * 1.6));
+  const level = wrong ? Math.min(4, solved + 1) : Math.min(4, solved);
+  return { index, solved, wrong, level };
+});
+
+const weakSpots = [
+  { tag: '组合计数', score: 68, reason: '推式前缺少小规模暴力校验', action: '先写枚举器，再做公式归纳' },
+  { tag: '区间 DP', score: 61, reason: '状态边界和枚举顺序不稳定', action: '固定“最后一步”模板复盘' },
+  { tag: '图论最短路', score: 44, reason: '建图遗漏反向边与虚点', action: '补 3 道分层图与虚源点题' },
+];
+
+const problemRecords = [
+  { platform: 'Codeforces', id: 'CF 1513C', title: 'Add One', status: 'WA 后 AC', tags: '计数 / DP', next: '重写转移注释' },
+  { platform: 'AtCoder', id: 'ABC 365 F', title: 'Takahashi on Grid', status: '待复盘', tags: '图论 / BFS', next: '整理建图方式' },
+  { platform: 'LeetCode', id: '312', title: 'Burst Balloons', status: '已写题解', tags: '区间 DP', next: '抽象模板' },
+  { platform: '洛谷', id: 'P1880', title: '石子合并', status: '需补题', tags: '环形 DP', next: '补一道变体' },
+];
+
+const contests = [
+  { name: 'ICPC 区域赛训练', time: '周六 14:00', type: 'XCPC', status: '待报名', focus: '三人协作与读题分工' },
+  { name: 'Codeforces Round', time: '滚动同步', type: '线上赛', status: '追踪中', focus: 'B/C 题速度' },
+  { name: 'AtCoder Beginner Contest', time: '周六 20:00', type: '线上赛', status: '固定参加', focus: 'D/E 题稳定性' },
+  { name: 'CCPC 省赛镜像赛', time: '待抓取', type: 'XCPC', status: '数据源规划', focus: '赛后补题列表' },
+];
+
+const recommendedProblems = [
+  'Codeforces 478D - Red-Green Towers',
+  'AtCoder DP Contest N - Slimes',
+  '洛谷 P2513 - 逆序对数列',
+  '牛客多校训练 - 区间合并专题',
+];
+---
+
+<Layout title={title} description={description}>
+  <TwoColumnLayout>
+    <Cover slot="cover" title="刷题追踪" />
+    <HomeSider slot="sider" />
+    <main class={`tracker-page bg-gradient-start shadow-box ${CONTENT_PADDING.standard}`} data-pagefind-body>
+      <section class="tracker-hero">
+        <div>
+          <p class="tracker-kicker">OJ Tracker</p>
+          <h1>把每一次 AC、WA 和补题都变成可追踪的成长曲线</h1>
+          <p>
+            聚合算法平台记录，沉淀题目数据库，交给 AI 分析薄弱题型，再把 XCPC 与线上赛排成下一阶段训练日程。
+          </p>
+        </div>
+        <div class="hero-metrics" aria-label="刷题概览">
+          <div>
+            <span>520</span>
+            <small>累计题目</small>
+          </div>
+          <div>
+            <span>47</span>
+            <small>错题复盘</small>
+          </div>
+          <div>
+            <span>12</span>
+            <small>比赛记录</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="tracker-grid">
+        <div class="tracker-panel activity-panel">
+          <div class="panel-title">
+            <Icon name="ri:calendar-check-line" />
+            <div>
+              <h2>刷题日历</h2>
+              <p>颜色越深代表当天训练量越高，带描边的是错题集中日。</p>
+            </div>
+          </div>
+          <div class="activity-calendar" aria-label="刷题日历格子">
+            {activityDays.map((day) => <span class={`activity-cell level-${day.level} ${day.wrong ? 'wrong' : ''}`} title={`Day ${day.index + 1}: ${day.solved} solved`} />)}
+          </div>
+          <div class="legend">
+            <span>少</span>
+            <i class="level-1"></i>
+            <i class="level-2"></i>
+            <i class="level-3"></i>
+            <i class="level-4"></i>
+            <span>多</span>
+          </div>
+        </div>
+
+        <div class="tracker-panel ai-panel">
+          <div class="panel-title">
+            <Icon name="ri:sparkling-2-line" />
+            <div>
+              <h2>AI 弱点分析</h2>
+              <p>按错题原因、标签频次和补题完成度生成训练建议。</p>
+            </div>
+          </div>
+          <div class="weak-list">
+            {
+              weakSpots.map((item) => (
+                <article>
+                  <div class="weak-head">
+                    <strong>{item.tag}</strong>
+                    <span>{item.score}%</span>
+                  </div>
+                  <div class="weak-bar"><i style={`width:${item.score}%`} /></div>
+                  <p>{item.reason}</p>
+                  <small>{item.action}</small>
+                </article>
+              ))
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="platform-strip">
+        {
+          platformSources.map((source) => (
+            <article style={`--platform-color:${source.color}`}>
+              <span>{source.name}</span>
+              <strong>{source.solved}</strong>
+              <small>{source.status}</small>
+            </article>
+          ))
+        }
+      </section>
+
+      <section class="tracker-grid bottom-grid">
+        <div class="tracker-panel records-panel">
+          <div class="panel-title">
+            <Icon name="ri:database-2-line" />
+            <div>
+              <h2>题目数据库</h2>
+              <p>记录做过、做错、复盘状态，并关联博客题解。</p>
+            </div>
+          </div>
+          <div class="record-table">
+            <div class="table-row table-head">
+              <span>平台</span>
+              <span>题目</span>
+              <span>状态</span>
+              <span>下一步</span>
+            </div>
+            {
+              problemRecords.map((item) => (
+                <div class="table-row">
+                  <span>{item.platform}</span>
+                  <span><b>{item.id}</b>{item.title}<em>{item.tags}</em></span>
+                  <span>{item.status}</span>
+                  <span>{item.next}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="tracker-panel contest-panel">
+          <div class="panel-title">
+            <Icon name="ri:trophy-line" />
+            <div>
+              <h2>比赛追踪</h2>
+              <p>记录 ACM/XCPC 与线上赛经历，生成行程表和补题清单。</p>
+            </div>
+          </div>
+          <div class="contest-list">
+            {
+              contests.map((contest) => (
+                <article>
+                  <span>{contest.type}</span>
+                  <div>
+                    <strong>{contest.name}</strong>
+                    <p>{contest.focus}</p>
+                  </div>
+                  <small>{contest.time} · {contest.status}</small>
+                </article>
+              ))
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="tracker-panel roadmap-panel">
+        <div class="panel-title">
+          <Icon name="ri:route-line" />
+          <div>
+            <h2>模块落地路线</h2>
+            <p>先做可用数据骨架，再接平台 API、AI 总结和 XCPC 日程抓取。</p>
+          </div>
+        </div>
+        <div class="roadmap">
+          <article>
+            <strong>数据层</strong>
+            <p>`profiles`、`problem_records`、`submissions`、`contest_entries`、`ai_reviews` 五张核心表。</p>
+          </article>
+          <article>
+            <strong>同步层</strong>
+            <p>Codeforces/AtCoder 走公开 API，LeetCode/洛谷/牛客先保留导入器和账号配置。</p>
+          </article>
+          <article>
+            <strong>AI 层</strong>
+            <p>输入错题、标签、题解草稿，输出弱点摘要、补题列表和周复盘素材。</p>
+          </article>
+          <article>
+            <strong>补题池</strong>
+            <ul>
+              {recommendedProblems.map((problem) => <li>{problem}</li>)}
+            </ul>
+          </article>
+        </div>
+      </section>
+    </main>
+  </TwoColumnLayout>
+</Layout>
+
+<style>
+  .tracker-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .tracker-hero,
+  .tracker-panel,
+  .platform-strip article {
+    border: 1px solid color-mix(in srgb, hsl(var(--primary)) 20%, transparent);
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 72%), rgb(255 246 252 / 82%)),
+      radial-gradient(circle at top right, rgb(136 221 255 / 28%), transparent 38%);
+    box-shadow: 0 18px 45px rgb(229 116 177 / 14%);
+    backdrop-filter: blur(14px);
+  }
+
+  :global(.dark) .tracker-hero,
+  :global(.dark) .tracker-panel,
+  :global(.dark) .platform-strip article {
+    background:
+      linear-gradient(135deg, rgb(35 27 45 / 78%), rgb(45 31 56 / 86%)),
+      radial-gradient(circle at top right, rgb(128 216 255 / 18%), transparent 40%);
+  }
+
+  .tracker-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.5rem;
+    align-items: end;
+    border-radius: 0.5rem;
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+  }
+
+  .tracker-kicker {
+    color: hsl(var(--primary));
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .tracker-hero h1 {
+    max-width: 760px;
+    margin-top: 0.35rem;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 800;
+    line-height: 1.14;
+  }
+
+  .tracker-hero p {
+    max-width: 720px;
+    margin-top: 0.9rem;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(5.25rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  .hero-metrics div {
+    display: grid;
+    min-height: 5.5rem;
+    place-items: center;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, rgb(255 126 184 / 22%), rgb(128 216 255 / 22%));
+  }
+
+  .hero-metrics span {
+    font-size: 1.65rem;
+    font-weight: 800;
+  }
+
+  .hero-metrics small,
+  .platform-strip small,
+  .contest-list small,
+  .weak-list small {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .tracker-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 0.88fr);
+    gap: 1.5rem;
+  }
+
+  .tracker-panel {
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+  }
+
+  .panel-title {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .panel-title svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: hsl(var(--primary));
+    flex: 0 0 auto;
+  }
+
+  .panel-title h2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  .panel-title p {
+    margin-top: 0.2rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.92rem;
+  }
+
+  .activity-calendar {
+    display: grid;
+    grid-template-columns: repeat(14, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .activity-cell,
+  .legend i {
+    display: block;
+    aspect-ratio: 1;
+    border-radius: 0.35rem;
+    background: rgb(244 222 235 / 75%);
+  }
+
+  .activity-cell.wrong {
+    outline: 2px solid rgb(255 94 152 / 78%);
+    outline-offset: 2px;
+  }
+
+  .level-1 { background: rgb(255 207 232 / 92%); }
+  .level-2 { background: rgb(255 162 211 / 94%); }
+  .level-3 { background: rgb(189 169 255 / 94%); }
+  .level-4 { background: linear-gradient(135deg, #ff7eb8, #80d8ff); }
+
+  .legend {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+    margin-top: 1rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.82rem;
+  }
+
+  .legend i {
+    width: 0.8rem;
+  }
+
+  .weak-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .weak-list article {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .weak-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-weight: 700;
+  }
+
+  .weak-bar {
+    height: 0.55rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(255 215 236 / 75%);
+  }
+
+  .weak-bar i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ff7eb8, #80d8ff);
+  }
+
+  .weak-list p {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.92rem;
+  }
+
+  .platform-strip {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+
+  .platform-strip article {
+    display: grid;
+    gap: 0.25rem;
+    min-height: 6rem;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border-color: color-mix(in srgb, var(--platform-color) 38%, transparent);
+  }
+
+  .platform-strip strong {
+    color: var(--platform-color);
+    font-size: 1.65rem;
+  }
+
+  .record-table {
+    display: grid;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    border: 1px solid rgb(255 126 184 / 18%);
+  }
+
+  .table-row {
+    display: grid;
+    grid-template-columns: 0.85fr 1.45fr 0.85fr 1fr;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgb(255 126 184 / 14%);
+  }
+
+  .table-row:last-child {
+    border-bottom: 0;
+  }
+
+  .table-head {
+    color: hsl(var(--muted-foreground));
+    background: rgb(255 126 184 / 10%);
+    font-weight: 700;
+  }
+
+  .table-row span {
+    min-width: 0;
+  }
+
+  .table-row b,
+  .table-row em {
+    display: block;
+  }
+
+  .table-row em {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8rem;
+    font-style: normal;
+  }
+
+  .contest-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .contest-list article {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.65rem 0.85rem;
+    align-items: start;
+    border-bottom: 1px solid rgb(255 126 184 / 14%);
+    padding-bottom: 0.85rem;
+  }
+
+  .contest-list article:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .contest-list article > span {
+    border-radius: 999px;
+    background: rgb(128 216 255 / 20%);
+    color: hsl(var(--primary));
+    padding: 0.25rem 0.55rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .contest-list small {
+    grid-column: 2;
+  }
+
+  .roadmap {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .roadmap article {
+    border-radius: 0.5rem;
+    background: rgb(255 255 255 / 42%);
+    padding: 1rem;
+  }
+
+  :global(.dark) .roadmap article {
+    background: rgb(255 255 255 / 7%);
+  }
+
+  .roadmap strong {
+    color: hsl(var(--primary));
+  }
+
+  .roadmap p,
+  .roadmap li {
+    margin-top: 0.55rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.92rem;
+  }
+
+  .roadmap ul {
+    margin: 0.2rem 0 0;
+    padding-left: 1rem;
+  }
+
+  @media (max-width: 1024px) {
+    .tracker-hero,
+    .tracker-grid,
+    .bottom-grid,
+    .roadmap {
+      grid-template-columns: 1fr;
+    }
+
+    .platform-strip {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero-metrics,
+    .platform-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .activity-calendar {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .table-row {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+    }
+
+    .table-head {
+      display: none;
+    }
+  }
+</style>

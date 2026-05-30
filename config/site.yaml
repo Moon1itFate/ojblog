@@ -166,6 +166,10 @@ social:
     url: https://github.com/Moon1itFate # 替换为你的 GitHub 链接
     icon: ri:github-fill # Remix Icon 的 GitHub 图标
     color: '#191717' # (可选) 图标颜色
+  bilibili:
+    url: https://search.bilibili.com/upuser?keyword=%E6%A2%A6%E6%9C%88%E3%81%AE%E7%BC%98
+    icon: ri:bilibili-fill
+    color: '#00A1D6'
   email:
     url: mailto:moonlit@example.com # 替换为你的邮箱，需加 mailto: 前缀
     icon: ri:mail-line

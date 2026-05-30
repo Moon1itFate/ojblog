@@ -32,6 +32,19 @@ const locale = getLocaleFromUrl(Astro.url.pathname);
 const href = data && localizedPath(routeBuilder(Routes.Post, data), locale);
 
 const pageStatsConfig = href ? createArticleStatsConfig(href) : null;
+
+const elysiaBannerImages = [
+  '/img/site_header_1920.webp',
+  '/img/elysia/cover-01.webp',
+  '/img/elysia/cover-03.webp',
+  '/img/elysia/cover-05.webp',
+  '/img/elysia/cover-06.webp',
+  '/img/elysia/cover-10.webp',
+  '/img/elysia/cover-13.webp',
+  '/img/elysia/cover-15.webp',
+];
+
+const bannerImages = data?.data.cover ? [data.data.cover] : elysiaBannerImages;
 ---
 
 <div class="relative flex h-[60dvh] z-0 max-h-200 overflow-hidden">
@@ -107,16 +120,67 @@ const pageStatsConfig = href ? createArticleStatsConfig(href) : null;
     id="banner-box"
     style={bannerLqipStyle}
   >
-    <img
-      src="/img/site_header_1920.webp"
-      alt="cover"
-      class="h-full w-full object-cover"
-      sizes="50vw"
-      srcset="/img/site_header_800.webp 800w,/img/site_header_1920.webp 1200w"
-      loading="eager"
-      fetchpriority="high"
-      decoding="async"
-    />
+    {
+      bannerImages.map((src, index) => (
+        <img
+          src={src}
+          alt="cover"
+          class:list={['banner-image', bannerImages.length === 1 && 'is-single']}
+          style={`--slide-index: ${index}; --slide-count: ${bannerImages.length};`}
+          sizes="50vw"
+          loading={index === 0 ? 'eager' : 'lazy'}
+          fetchpriority={index === 0 ? 'high' : 'auto'}
+          decoding="async"
+        />
+      ))
+    }
   </div>
   <WaveSvg />
 </div>
+
+<style>
+  .banner-image {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transform: scale(1.02);
+  }
+
+  .banner-image.is-single {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .banner-image:not(.is-single) {
+    animation: elysia-banner-fade calc(var(--slide-count) * 7s) ease-in-out infinite;
+    animation-delay: calc(var(--slide-index) * 7s);
+  }
+
+  @keyframes elysia-banner-fade {
+    0%,
+    12% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    17%,
+    100% {
+      opacity: 0;
+      transform: scale(1.04);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .banner-image:not(:first-child) {
+      display: none;
+    }
+
+    .banner-image:first-child {
+      opacity: 1;
+      animation: none;
+      transform: scale(1);
+    }
+  }
+</style>
