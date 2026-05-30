@@ -4,6 +4,26 @@ export type SubmissionVerdict = "accepted" | "wrong-answer" | "time-limit" | "ru
 
 export type ProblemStatus = "solved" | "reviewing" | "stuck";
 
+export interface Profile {
+  name: string;
+  handle: string;
+  headline: string;
+  bio: string;
+  githubUrl: string;
+  email: string;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  category: "算法题解" | "学习笔记" | "项目日志" | "周复盘";
+  tags: string[];
+  publishedAt: string;
+  readingTime: string;
+  featured?: boolean;
+}
+
 export interface OjAccount {
   platform: OjPlatform;
   handle: string;
@@ -52,6 +72,55 @@ export interface AiDigest {
   weakSignals: string[];
   nextActions: string[];
 }
+
+export const profile: Profile = {
+  name: "Moon1itFate",
+  handle: "moonlit.dev",
+  headline: "写代码、刷题，也把踩过的坑认真留下来。",
+  bio: "这里会记录我的算法训练、项目开发、工程笔记和阶段复盘。OJ 追踪只是博客里的一个小功能，但它会把刷题记录、题解、AI 复盘和下一步训练计划串起来。",
+  githubUrl: "https://github.com/Moon1itFate",
+  email: "moonlit@example.com",
+};
+
+export const blogPosts: BlogPost[] = [
+  {
+    id: "post-interval-dp",
+    title: "区间 DP：从最后一步反推状态",
+    excerpt: "用 Burst Balloons 和石子合并复盘区间 DP 的状态定义，重点记录为什么要枚举最后一次操作。",
+    category: "算法题解",
+    tags: ["dp", "interval", "review"],
+    publishedAt: "2026-05-30",
+    readingTime: "8 min",
+    featured: true,
+  },
+  {
+    id: "post-ojblog-mvp",
+    title: "ojblog 项目日志：先做博客，再做刷题模板",
+    excerpt: "把刷题追踪从主产品降级为博客模块，先验证个人站的信息架构，再抽出可复用包。",
+    category: "项目日志",
+    tags: ["react", "typescript", "product"],
+    publishedAt: "2026-05-29",
+    readingTime: "5 min",
+  },
+  {
+    id: "post-scc-dag",
+    title: "Tarjan 缩点后，为什么 DAG DP 会变简单",
+    excerpt: "从洛谷 P3387 复盘 SCC 缩点、拓扑序和最大权路径的组合套路。",
+    category: "算法题解",
+    tags: ["graph", "tarjan", "dag-dp"],
+    publishedAt: "2026-05-27",
+    readingTime: "7 min",
+  },
+  {
+    id: "post-weekly-review",
+    title: "本周复盘：计数题需要先写暴力校验",
+    excerpt: "总结最近 WA 集中的几类题，给每个薄弱点安排下一组训练题。",
+    category: "周复盘",
+    tags: ["review", "combinatorics", "training"],
+    publishedAt: "2026-05-26",
+    readingTime: "6 min",
+  },
+];
 
 export const accounts: OjAccount[] = [
   {

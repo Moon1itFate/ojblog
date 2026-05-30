@@ -1,6 +1,6 @@
 # ojblog
 
-ojblog is a personal algorithm practice knowledge base. It aims to combine an OJ progress tracker, a problem-solution blog, AI-assisted review, and high-quality weak-topic recommendations across multiple online judge platforms.
+ojblog is a personal blog with an algorithm practice tracker built in. The blog is the main product surface; the OJ tracker is a focused feature for recording solved problems, turning reviews into posts, and planning the next training set.
 
 ## Similar Open Source Projects
 
@@ -19,15 +19,17 @@ ojblog's intended gap is the combination of:
 
 ## Current MVP
 
-The first version is a Vite + React + TypeScript frontend with local mock data. It already includes:
+The first version is a Vite + React + TypeScript frontend with local mock data. It now uses a blog-first layout and includes:
 
-- training overview dashboard;
+- personal blog home page;
+- article feed and category sidebar;
+- about page with profile links;
+- OJ tracker as a standalone blog feature;
 - OJ account sync status cards;
-- searchable problem records;
 - topic confidence profile;
 - AI weekly review panel;
 - weak-topic recommendation cards;
-- problem-solution blog draft area.
+- recent problem record table.
 
 ## Product Roadmap
 
@@ -37,6 +39,7 @@ The first version is a Vite + React + TypeScript frontend with local mock data. 
 4. Connect an LLM provider for weekly summaries, mistake clustering, and blog draft generation.
 5. Build recommendation ranking from weak topics, difficulty band, recency, and source quality.
 6. Add export/import for Markdown posts and JSON backups.
+7. Extract the OJ tracker into a reusable package, for example `@ojblog/tracker-template`.
 
 ## Data Direction
 
