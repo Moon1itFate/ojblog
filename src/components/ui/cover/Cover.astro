@@ -142,11 +142,29 @@ const bannerImages = data?.data.cover ? [data.data.cover] : elysiaBannerImages;
   .banner-image {
     position: absolute;
     inset: 0;
+    z-index: 1;
     height: 100%;
     width: 100%;
     object-fit: cover;
     opacity: 0;
-    transform: scale(1.02);
+    filter: saturate(1.04) brightness(0.98);
+    transform: scale(1.045);
+    will-change: opacity, transform, filter;
+  }
+
+  #banner-box::before {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    content: '';
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 22% 18%, rgba(255, 176, 216, 0.36), transparent 34%),
+      radial-gradient(circle at 78% 22%, rgba(163, 226, 255, 0.28), transparent 30%),
+      linear-gradient(115deg, rgba(255, 126, 184, 0.24), transparent 46%, rgba(210, 184, 255, 0.22));
+    mix-blend-mode: screen;
+    opacity: 0.52;
+    animation: elysia-gradient-breath 7s ease-in-out infinite;
   }
 
   .banner-image.is-single {
@@ -155,24 +173,52 @@ const bannerImages = data?.data.cover ? [data.data.cover] : elysiaBannerImages;
   }
 
   .banner-image:not(.is-single) {
-    animation: elysia-banner-fade calc(var(--slide-count) * 7s) ease-in-out infinite;
+    animation: elysia-banner-fade calc(var(--slide-count) * 7s) cubic-bezier(0.45, 0, 0.25, 1) infinite;
     animation-delay: calc(var(--slide-index) * 7s);
+    animation-fill-mode: both;
   }
 
   @keyframes elysia-banner-fade {
-    0%,
+    0% {
+      opacity: 0;
+      filter: saturate(1.02) brightness(0.94);
+      transform: scale(1.055);
+    }
+    4%,
     12% {
       opacity: 1;
-      transform: scale(1);
+      filter: saturate(1.08) brightness(1);
+      transform: scale(1.015);
     }
-    17%,
+    18%,
     100% {
       opacity: 0;
-      transform: scale(1.04);
+      filter: saturate(1.02) brightness(0.96);
+      transform: scale(1.055);
+    }
+  }
+
+  @keyframes elysia-gradient-breath {
+    0%,
+    100% {
+      opacity: 0.42;
+      transform: translate3d(-1%, 0, 0) scale(1.01);
+    }
+    24% {
+      opacity: 0.68;
+      transform: translate3d(1%, 0, 0) scale(1.03);
+    }
+    58% {
+      opacity: 0.5;
+      transform: translate3d(0, 1%, 0) scale(1.02);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
+    #banner-box::before {
+      animation: none;
+    }
+
     .banner-image:not(:first-child) {
       display: none;
     }
