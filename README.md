@@ -1,63 +1,49 @@
 # ojblog
 
-ojblog is a personal blog with an algorithm practice tracker built in. The blog is the main product surface; the OJ tracker is a focused feature for recording solved problems, turning reviews into posts, and planning the next training set.
+ojblog is an AGPL-3.0 personal blog based on [astro-koharu](https://github.com/cosZone/astro-koharu).
 
-## Similar Open Source Projects
+The site direction is:
 
-There are useful partial matches, but no exact open-source match for this product shape:
+- Koharu-style personal blog layout and content system;
+- Elysia-inspired visual mood: soft pink, white, crystal blue, petals, glass panels, and a fantasy garden;
+- algorithm editorials, project logs, weekly reviews, and life notes;
+- an OJ Tracker section that will later become a reusable blog module/template package.
 
-- [AlgoTrack](https://github.com/PopoviciGabriel/AlgoTrack): a local C++/Qt desktop tracker for LeetCode, Codeforces, AtCoder style problem logs, tags, notes, and statistics.
-- [OJHunt Lite](https://github.com/Liu233w/ojhunt-lite): a Python/web tool for querying accepted problems and submissions across many OJ platforms.
-- [leet-tracker](https://github.com/dmiska25/leet-tracker): LeetCode-focused progress tracking with AI feedback and recommendation logic.
+## License
 
-ojblog's intended gap is the combination of:
+This project now uses `astro-koharu` as its base template. `astro-koharu` is licensed under AGPL-3.0, so this repository keeps the same license and includes the upstream `LICENSE` file.
 
-- multi-OJ solved-problem synchronization;
-- blog-first problem notes and editorials;
-- AI summary over personal solve history;
-- weak-topic detection and cross-platform problem discovery.
+If the deployed site is publicly accessible, the corresponding modified source code should remain available as required by AGPL-3.0.
 
-## Current MVP
+## Development
 
-The first version is a Vite + React + TypeScript frontend with local mock data. It now uses a blog-first layout and includes:
-
-- personal blog home page;
-- article feed and category sidebar;
-- about page with profile links;
-- OJ tracker as a standalone blog feature;
-- OJ account sync status cards;
-- topic confidence profile;
-- AI weekly review panel;
-- weak-topic recommendation cards;
-- recent problem record table.
-
-## Product Roadmap
-
-1. Add persistent storage for accounts, problem records, notes, tags, and AI digests.
-2. Implement platform adapters, starting with Codeforces public API and import-based LeetCode support.
-3. Add a normalized problem taxonomy for tags, difficulty, verdicts, and review state.
-4. Connect an LLM provider for weekly summaries, mistake clustering, and blog draft generation.
-5. Build recommendation ranking from weak topics, difficulty band, recency, and source quality.
-6. Add export/import for Markdown posts and JSON backups.
-7. Extract the OJ tracker into a reusable package, for example `@ojblog/tracker-template`.
-
-## Data Direction
-
-Core entities are already represented in `src/domain.ts`:
-
-- `OjAccount`
-- `ProblemRecord`
-- `TopicProfile`
-- `Recommendation`
-- `AiDigest`
-
-These types are intentionally frontend-friendly now, and can later become API DTOs shared with a backend.
-
-## Local Development
+The upstream template uses pnpm.
 
 ```bash
-npm install
-npm run dev
+corepack enable
+pnpm install
+pnpm dev
 ```
 
-Then open the local URL printed by Vite.
+Build:
+
+```bash
+pnpm build
+```
+
+## Customized Content
+
+Current customizations:
+
+- `config/site.yaml`: site profile, navigation, categories, featured series, social links, and tracker entry.
+- `public/img/elysia-garden.svg`: original Elysia-inspired garden/crystal visual.
+- `src/content/blog`: initial posts for algorithm notes, project logs, weekly review, and life notes.
+- `src/pages/tracker.md`: OJ Tracker planning page.
+
+## OJ Tracker Roadmap
+
+1. Start as a page and content category inside the blog.
+2. Add normalized OJ account/problem/review data.
+3. Connect platform sync/import adapters.
+4. Add AI-powered weekly summaries and weak-topic recommendations.
+5. Extract the tracker as a reusable package, such as `@ojblog/tracker-template`.
