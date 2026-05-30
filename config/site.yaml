@@ -16,11 +16,11 @@ site:
   subtitle: 如飞花般记录代码、题解与复盘 # 网站副标题
   name: Moon1itFate # 作者名称 - 请修改为你的名字
   description: 一个爱莉希雅风格的个人博客，包含算法题解、项目日志与 OJ 刷题追踪。 # 网站描述
-  avatar: /img/elysia-garden.svg # 网站头像
+  avatar: /img/elysia/avatar.jpg # 网站头像
   showLogo: true # 是否显示 Logo
   author: Moon1itFate # 作者名称 - 请修改为你的名字
   url: https://github.com/Moon1itFate/ojblog # 站点 URL 用于 RSS 和 SEO
-  defaultOgImage: /img/elysia-garden.svg # 默认 Open Graph 图片
+  defaultOgImage: /img/elysia/cover-13.webp # 默认 Open Graph 图片
   startYear: 2026 # 建站年份
   timezone: Asia/Shanghai # 时区配置 (IANA 格式)，用于日期显示和处理
   keywords: # SEO 关键词 (全局)
@@ -91,19 +91,19 @@ categoryMap:
 featuredCategories:
   - link: life # 对应 categoryMap 中 随笔: life
     label: 随笔
-    image: /img/elysia-garden.svg
+    image: /img/elysia/cover-03.webp
     description: 灵感碎片、生活记录与站点随想
   - link: algorithm
     label: 算法题解
-    image: /img/elysia-garden.svg
+    image: /img/elysia/cover-06.webp
     description: 题解、错题复盘与训练方法
   - link: project
     label: 项目日志
-    image: /img/elysia-garden.svg
+    image: /img/elysia/cover-01.webp
     description: ojblog 的设计、开发与重构记录
   - link: review
     label: 周复盘
-    image: /img/elysia-garden.svg
+    image: /img/elysia/cover-10.webp
     description: 每周把训练信号整理成下一步行动
 
 # =============================================================================
@@ -131,7 +131,7 @@ featuredSeries:
     description: | # 支持多行 Markdown
       用来整理最近一周的刷题、项目和阅读记录。
       复盘会沉淀薄弱题型、错因模式和下一组训练计划。
-    cover: /img/elysia-garden.svg # 系列页面头图
+    cover: /img/elysia/cover-13.webp # 系列页面头图
     enabled: true # 启用此系列
     icon: ri:sparkling-2-line # 导航图标
     links: # 相关链接（可选）
@@ -282,9 +282,22 @@ announcements:
 # 默认封面列表 - 文章没有指定封面时将随机从列表中选择一张作为封面
 # 不设置则使用内置的 21 张默认封面 (/img/cover/1~21.webp)
 # =============================================================================
-# defaultCoverList:
-#   - /img/cover/1.webp
-#   - https://example.com/custom-cover.webp
+defaultCoverList:
+  - /img/elysia/cover-01.webp
+  - /img/elysia/cover-02.webp
+  - /img/elysia/cover-03.webp
+  - /img/elysia/cover-04.webp
+  - /img/elysia/cover-05.webp
+  - /img/elysia/cover-06.webp
+  - /img/elysia/cover-07.webp
+  - /img/elysia/cover-08.webp
+  - /img/elysia/cover-09.webp
+  - /img/elysia/cover-10.webp
+  - /img/elysia/cover-11.webp
+  - /img/elysia/cover-12.webp
+  - /img/elysia/cover-13.webp
+  - /img/elysia/cover-14.webp
+  - /img/elysia/cover-15.webp
 
 
 # =============================================================================

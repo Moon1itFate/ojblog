@@ -2,7 +2,7 @@
 title: "区间 DP：从最后一步反推状态"
 description: "用 Burst Balloons 和石子合并复盘区间 DP 的状态定义。"
 date: 2026-05-30 15:20:00
-cover: /img/elysia-garden.svg
+cover: /img/elysia/cover-06.webp
 tags:
   - dp
   - interval

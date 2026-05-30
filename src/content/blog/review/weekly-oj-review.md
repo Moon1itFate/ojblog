@@ -2,7 +2,7 @@
 title: "本周复盘：计数题需要先写暴力校验"
 description: "总结最近 WA 集中的几类题，并安排下一组训练题。"
 date: 2026-05-29 22:00:00
-cover: /img/elysia-garden.svg
+cover: /img/elysia/cover-10.webp
 tags:
   - review
   - combinatorics
