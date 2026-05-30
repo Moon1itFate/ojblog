@@ -11,7 +11,13 @@ import {
   RiTimerFlashLine,
 } from 'react-icons/ri';
 import { buildTrackerAnalytics } from '@/lib/tracker/analytics';
-import { syncTrackerData } from '@/lib/tracker/providers';
+import {
+  createEmptyTrackerAccounts,
+  getTrackerProviderName,
+  normalizeTrackerAccounts,
+  syncTrackerData,
+  trackerProviders,
+} from '@/lib/tracker/providers';
 import type {
   ContestRecord,
   OjSubmission,
@@ -25,10 +31,7 @@ const ACCOUNT_STORAGE_KEY = 'ojblog:tracker:accounts';
 const SNAPSHOT_STORAGE_KEY = 'ojblog:tracker:snapshot';
 const AUTO_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
-const emptyAccounts: TrackerAccounts = {
-  codeforces: '',
-  atcoder: '',
-};
+const emptyAccounts = createEmptyTrackerAccounts();
 
 function formatDate(value?: string) {
   if (!value) return '暂无';
@@ -41,7 +44,7 @@ function formatDate(value?: string) {
 }
 
 function platformName(platform: string) {
-  return platform === 'codeforces' ? 'Codeforces' : 'AtCoder';
+  return getTrackerProviderName(platform);
 }
 
 function sourceClass(status: TrackerSourceStatus['status']) {
@@ -85,11 +88,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function isTrackerAccounts(value: unknown): value is TrackerAccounts {
   if (!isObject(value)) return false;
-  const { codeforces, atcoder } = value;
-  return (
-    (codeforces === undefined || typeof codeforces === 'string') &&
-    (atcoder === undefined || typeof atcoder === 'string')
-  );
+  return Object.values(value).every((handle) => handle === undefined || typeof handle === 'string');
 }
 
 function isTrackerSnapshot(value: unknown): value is TrackerSnapshot {
@@ -112,14 +111,11 @@ function safeBuildTrackerAnalytics(snapshot: TrackerSnapshot | null): TrackerAna
 }
 
 function normalizeAccounts(accounts: TrackerAccounts): TrackerAccounts {
-  return {
-    codeforces: accounts.codeforces?.trim() || undefined,
-    atcoder: accounts.atcoder?.trim() || undefined,
-  };
+  return normalizeTrackerAccounts(accounts);
 }
 
 function hasAnyAccount(accounts: TrackerAccounts) {
-  return Boolean(accounts.codeforces?.trim() || accounts.atcoder?.trim());
+  return Object.values(accounts).some((handle) => handle?.trim());
 }
 
 function SourceStatusList({ sources }: { sources: TrackerSourceStatus[] }) {
@@ -218,7 +214,7 @@ export default function OjTrackerApp() {
     if (storedAccounts && !savedAccounts) removeStoredJson(ACCOUNT_STORAGE_KEY);
     if (storedSnapshot && !savedSnapshot) removeStoredJson(SNAPSHOT_STORAGE_KEY);
 
-    if (savedAccounts) setAccounts(savedAccounts);
+    if (savedAccounts) setAccounts({ ...emptyAccounts, ...savedAccounts });
     if (savedSnapshot) setSnapshot(savedSnapshot);
 
     const shouldAutoSync =
@@ -298,22 +294,18 @@ export default function OjTrackerApp() {
           </div>
         </div>
         <div className="sync-controls">
-          <label>
-            <span>Codeforces Handle</span>
-            <input
-              value={accounts.codeforces ?? ''}
-              placeholder="例如 tourist"
-              onChange={(event) => setAccounts((current) => ({ ...current, codeforces: event.target.value }))}
-            />
-          </label>
-          <label>
-            <span>AtCoder User ID</span>
-            <input
-              value={accounts.atcoder ?? ''}
-              placeholder="例如 chokudai"
-              onChange={(event) => setAccounts((current) => ({ ...current, atcoder: event.target.value }))}
-            />
-          </label>
+          {trackerProviders.map((provider) => (
+            <label key={provider.platform}>
+              <span>{provider.accountLabel}</span>
+              <input
+                value={accounts[provider.platform] ?? ''}
+                placeholder={provider.accountPlaceholder}
+                onChange={(event) =>
+                  setAccounts((current) => ({ ...current, [provider.platform]: event.target.value }))
+                }
+              />
+            </label>
+          ))}
           <button type="button" onClick={() => void handleSync()} disabled={loading}>
             <RiRefreshLine className={loading ? 'spin' : ''} />
             {loading ? '同步中' : '同步'}

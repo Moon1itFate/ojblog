@@ -1,8 +1,17 @@
-export type OjPlatform = 'codeforces' | 'atcoder';
+export type OjPlatform = string;
 
-export interface TrackerAccounts {
-  codeforces?: string;
-  atcoder?: string;
+export type TrackerAccounts = Partial<Record<OjPlatform, string>>;
+
+export interface TrackerProviderDefinition {
+  platform: OjPlatform;
+  name: string;
+  accountLabel: string;
+  accountPlaceholder: string;
+  homepage: string;
+  supports: {
+    submissions: boolean;
+    contests: boolean;
+  };
 }
 
 export interface OjSubmission {
@@ -34,6 +43,8 @@ export interface ContestRecord {
 
 export interface TrackerSourceStatus {
   platform: OjPlatform;
+  sourceName?: string;
+  kind?: 'submissions' | 'contests';
   handle?: string;
   status: 'connected' | 'error' | 'skipped';
   message: string;

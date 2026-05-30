@@ -1,8 +1,21 @@
-import type { ContestRecord, OjSubmission, TrackerAccounts, TrackerSnapshot, TrackerSourceStatus } from './types';
+import type {
+  ContestRecord,
+  OjPlatform,
+  OjSubmission,
+  TrackerAccounts,
+  TrackerProviderDefinition,
+  TrackerSnapshot,
+  TrackerSourceStatus,
+} from './types';
 
 const CODEFORCES_API = 'https://codeforces.com/api';
 const ATCODER_PROBLEMS_API = 'https://kenkoooo.com/atcoder/atcoder-api';
 const REQUEST_TIMEOUT_MS = 15_000;
+
+export interface TrackerProvider extends TrackerProviderDefinition {
+  fetchSubmissions?: (handle: string) => Promise<OjSubmission[]>;
+  fetchContests?: (handle: string) => Promise<ContestRecord[]>;
+}
 
 interface CodeforcesResponse<T> {
   status: 'OK' | 'FAILED';
@@ -59,8 +72,8 @@ interface AtCoderContestHistory {
 
 function createTimeoutSignal() {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  return { signal: controller.signal, clear: () => window.clearTimeout(timeout) };
+  const timeout = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  return { signal: controller.signal, clear: () => globalThis.clearTimeout(timeout) };
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -188,8 +201,58 @@ export async function fetchAtCoderContests(handle: string): Promise<ContestRecor
     }));
 }
 
+export const trackerProviders: TrackerProvider[] = [
+  {
+    platform: 'codeforces',
+    name: 'Codeforces',
+    accountLabel: 'Codeforces Handle',
+    accountPlaceholder: '例如 tourist',
+    homepage: 'https://codeforces.com',
+    supports: {
+      submissions: true,
+      contests: true,
+    },
+    fetchSubmissions: fetchCodeforcesSubmissions,
+    fetchContests: fetchCodeforcesContests,
+  },
+  {
+    platform: 'atcoder',
+    name: 'AtCoder',
+    accountLabel: 'AtCoder User ID',
+    accountPlaceholder: '例如 chokudai',
+    homepage: 'https://atcoder.jp',
+    supports: {
+      submissions: true,
+      contests: true,
+    },
+    fetchSubmissions: fetchAtCoderSubmissions,
+    fetchContests: fetchAtCoderContests,
+  },
+];
+
+export function getTrackerProvider(platform: OjPlatform) {
+  return trackerProviders.find((provider) => provider.platform === platform);
+}
+
+export function getTrackerProviderName(platform: OjPlatform) {
+  return getTrackerProvider(platform)?.name ?? platform;
+}
+
+export function createEmptyTrackerAccounts(): TrackerAccounts {
+  return Object.fromEntries(trackerProviders.map((provider) => [provider.platform, '']));
+}
+
+export function normalizeTrackerAccounts(accounts: TrackerAccounts): TrackerAccounts {
+  return Object.fromEntries(
+    trackerProviders
+      .map((provider) => [provider.platform, accounts[provider.platform]?.trim()] as const)
+      .filter(([, handle]) => Boolean(handle)),
+  );
+}
+
 async function collectSource<T>(
-  platform: TrackerSourceStatus['platform'],
+  provider: TrackerProvider,
+  kind: NonNullable<TrackerSourceStatus['kind']>,
   handle: string | undefined,
   fetcher: (handle: string) => Promise<T[]>,
 ): Promise<{ items: T[]; status: TrackerSourceStatus }> {
@@ -198,7 +261,9 @@ async function collectSource<T>(
     return {
       items: [],
       status: {
-        platform,
+        platform: provider.platform,
+        sourceName: provider.name,
+        kind,
         status: 'skipped',
         message: '未配置账号',
         count: 0,
@@ -211,10 +276,12 @@ async function collectSource<T>(
     return {
       items,
       status: {
-        platform,
+        platform: provider.platform,
+        sourceName: provider.name,
+        kind,
         handle: normalized,
         status: 'connected',
-        message: '已同步公网数据',
+        message: kind === 'contests' ? `已同步 ${items.length} 场比赛` : '已同步公网数据',
         count: items.length,
       },
     };
@@ -222,7 +289,9 @@ async function collectSource<T>(
     return {
       items: [],
       status: {
-        platform,
+        platform: provider.platform,
+        sourceName: provider.name,
+        kind,
         handle: normalized,
         status: 'error',
         message: error instanceof Error ? error.message : '同步失败',
@@ -233,51 +302,39 @@ async function collectSource<T>(
 }
 
 export async function syncTrackerData(accounts: TrackerAccounts): Promise<TrackerSnapshot> {
-  const [codeforcesSubmissions, codeforcesContests, atcoderSubmissions, atcoderContests] = await Promise.all([
-    collectSource('codeforces', accounts.codeforces, fetchCodeforcesSubmissions),
-    collectSource('codeforces', accounts.codeforces, fetchCodeforcesContests),
-    collectSource('atcoder', accounts.atcoder, fetchAtCoderSubmissions),
-    collectSource('atcoder', accounts.atcoder, fetchAtCoderContests),
-  ]);
+  const normalizedAccounts = normalizeTrackerAccounts(accounts);
+  const sourceTasks = trackerProviders.flatMap((provider) => {
+    const handle = normalizedAccounts[provider.platform];
+    return [
+      provider.fetchSubmissions
+        ? collectSource(provider, 'submissions', handle, provider.fetchSubmissions)
+        : Promise.resolve<{ items: OjSubmission[]; status: TrackerSourceStatus } | null>(null),
+      provider.fetchContests
+        ? collectSource(provider, 'contests', handle, provider.fetchContests)
+        : Promise.resolve<{ items: ContestRecord[]; status: TrackerSourceStatus } | null>(null),
+    ];
+  });
 
-  const codeforcesStatus =
-    codeforcesSubmissions.status.status === 'connected'
-      ? {
-          ...codeforcesSubmissions.status,
-          count: codeforcesSubmissions.items.length,
-        }
-      : codeforcesSubmissions.status;
-
-  const contestStatus =
-    codeforcesContests.status.status === 'connected'
-      ? {
-          ...codeforcesContests.status,
-          message: `已同步 ${codeforcesContests.items.length} 场比赛`,
-          count: codeforcesContests.items.length,
-        }
-      : codeforcesContests.status;
-
-  const atcoderContestStatus =
-    atcoderContests.status.status === 'connected'
-      ? {
-          ...atcoderContests.status,
-          message: `已同步 ${atcoderContests.items.length} 场比赛`,
-          count: atcoderContests.items.length,
-        }
-      : atcoderContests.status;
+  const sourceResults = (await Promise.all(sourceTasks)).filter((result): result is NonNullable<typeof result> =>
+    Boolean(result),
+  );
+  const submissionResults = sourceResults.filter(
+    (result): result is { items: OjSubmission[]; status: TrackerSourceStatus } =>
+      result.status.kind === 'submissions',
+  );
+  const contestResults = sourceResults.filter(
+    (result): result is { items: ContestRecord[]; status: TrackerSourceStatus } => result.status.kind === 'contests',
+  );
 
   return {
     fetchedAt: new Date().toISOString(),
-    accounts: {
-      codeforces: accounts.codeforces?.trim() || undefined,
-      atcoder: accounts.atcoder?.trim() || undefined,
-    },
-    submissions: [...codeforcesSubmissions.items, ...atcoderSubmissions.items].sort(
-      (a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt),
-    ),
-    contests: [...codeforcesContests.items, ...atcoderContests.items].sort(
-      (a, b) => Date.parse(b.participatedAt) - Date.parse(a.participatedAt),
-    ),
-    sources: [codeforcesStatus, atcoderSubmissions.status, contestStatus, atcoderContestStatus],
+    accounts: normalizedAccounts,
+    submissions: submissionResults
+      .flatMap((result) => result.items)
+      .sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt)),
+    contests: contestResults
+      .flatMap((result) => result.items)
+      .sort((a, b) => Date.parse(b.participatedAt) - Date.parse(a.participatedAt)),
+    sources: sourceResults.map((result) => result.status),
   };
 }
