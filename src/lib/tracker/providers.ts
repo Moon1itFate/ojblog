@@ -1,3 +1,4 @@
+import { parseNowCoderSubmissions } from './nowcoder';
 import type {
   ContestRecord,
   OjPlatform,
@@ -201,6 +202,42 @@ export async function fetchAtCoderContests(handle: string): Promise<ContestRecor
     }));
 }
 
+export async function fetchNowCoderSubmissions(userId: string): Promise<OjSubmission[]> {
+  const url = `/api/tracker/nowcoder/${encodeURIComponent(userId)}/tests`;
+  const payload = await fetchJson<{ submissions: OjSubmission[] }>(url);
+  return payload.submissions;
+}
+
+export async function fetchNowCoderSubmissionsFromPublicPage(userId: string): Promise<OjSubmission[]> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const url = `https://api-cdn.nowcoder.com/users/${encodeURIComponent(userId)}/tests?__ojblog=${Date.now()}-${attempt}`;
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+      },
+    });
+    if (!response.ok) {
+      lastError = new Error(`牛客公开页 HTTP ${response.status}`);
+      continue;
+    }
+
+    try {
+      return parseNowCoderSubmissions(await response.text(), userId);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('牛客数据同步失败');
+}
+
 export const trackerProviders: TrackerProvider[] = [
   {
     platform: 'codeforces',
@@ -227,6 +264,18 @@ export const trackerProviders: TrackerProvider[] = [
     },
     fetchSubmissions: fetchAtCoderSubmissions,
     fetchContests: fetchAtCoderContests,
+  },
+  {
+    platform: 'nowcoder',
+    name: '牛客',
+    accountLabel: '牛客 User ID',
+    accountPlaceholder: '例如 251475259（个人主页数字 ID）',
+    homepage: 'https://www.nowcoder.com',
+    supports: {
+      submissions: true,
+      contests: false,
+    },
+    fetchSubmissions: fetchNowCoderSubmissions,
   },
 ];
 
@@ -319,8 +368,7 @@ export async function syncTrackerData(accounts: TrackerAccounts): Promise<Tracke
     Boolean(result),
   );
   const submissionResults = sourceResults.filter(
-    (result): result is { items: OjSubmission[]; status: TrackerSourceStatus } =>
-      result.status.kind === 'submissions',
+    (result): result is { items: OjSubmission[]; status: TrackerSourceStatus } => result.status.kind === 'submissions',
   );
   const contestResults = sourceResults.filter(
     (result): result is { items: ContestRecord[]; status: TrackerSourceStatus } => result.status.kind === 'contests',

@@ -11,6 +11,7 @@
     "generate:summaries:force": "npx tsx src/scripts/generateSummaries.ts --force",
     "generate:all": "npm run generate:lqips && npm run generate:summaries && npm run generate:similarities",
     "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import node from '@astrojs/node';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import yaml from '@rollup/plugin-yaml';
@@ -172,6 +173,9 @@ if (contentConfig.enableCodeMeta !== false) shikiTransformers.push(shokaMetaTran
 // https://astro.build/config
 export default defineConfig({
   site: yamlConfig.site.url,
+  adapter: node({
+    mode: 'standalone',
+  }),
   compressHTML: true,
   markdown: {
     // Enable GitHub Flavored Markdown

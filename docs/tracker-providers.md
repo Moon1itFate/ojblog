@@ -1,6 +1,6 @@
 # OJ Tracker Provider Guide
 
-OJ Tracker 的公网同步层采用 provider registry。新增一个刷题网站时，优先把平台适配代码放到 `src/lib/tracker/providers.ts`，再注册到 `trackerProviders`。
+OJ Tracker 的公网同步层采用 provider registry。新增一个刷题网站时，优先把平台适配代码放到 `src/lib/tracker/providers.ts`，必要时再为受 CORS 或鉴权限制的平台增加 Astro API route。
 
 ## Provider 结构
 
@@ -52,8 +52,20 @@ OJ Tracker 的公网同步层采用 provider registry。新增一个刷题网站
 1. 在 `providers.ts` 中为目标网站声明 API 响应类型。
 2. 实现 `fetchNewOjSubmissions(handle)`，必要时实现 `fetchNewOjContests(handle)`。
 3. 把 provider 对象加入 `trackerProviders` 数组。
-4. 运行 `corepack pnpm check` 和 `corepack pnpm build`。
-5. 如果平台 API 需要后端密钥或绕过 CORS，不要直接放在前端 fetch，改为后端 API route 或定时同步任务。
+4. 如果平台 API 需要后端密钥或绕过 CORS，不要直接放在前端 `fetch`，改为 Astro API route 或定时同步任务。
+5. 运行 `corepack pnpm check` 和 `corepack pnpm build`。
+
+## 已接入平台
+
+- Codeforces：前端直接调用公开 JSON API，支持提交和比赛历史。
+- AtCoder：前端调用 kenkoooo submissions API 和 AtCoder history JSON，支持提交和比赛历史。
+- 牛客：通过同源 API route `/api/tracker/nowcoder/[userId]/tests` 抓取公开个人刷题页，再解析 `window.__INITIAL_STATE__`。牛客页面没有开放跨域响应头，所以该平台需要服务端运行时。
+
+## 部署说明
+
+牛客同步需要服务端代理，因此项目现在使用 Astro Node adapter。构建后可以通过 `pnpm start` 运行 `dist/server/entry.mjs`，适合部署到 VPS、Docker、Railway、Render 等支持 Node 服务的平台。
+
+如果只部署到纯静态托管，Codeforces 和 AtCoder 仍可继续使用，但牛客同步的 API route 无法运行。
 
 ## 后续云端化方向
 
@@ -61,5 +73,5 @@ OJ Tracker 的公网同步层采用 provider registry。新增一个刷题网站
 
 - 用户保存平台账号到数据库。
 - Cron 定时读取账号并调用 provider。
-- 同步结果写入 submissions、contests、daily_stats 表。
+- 同步结果写入 `submissions`、`contests`、`daily_stats` 表。
 - 前端只读取数据库快照，不依赖用户打开页面触发同步。
