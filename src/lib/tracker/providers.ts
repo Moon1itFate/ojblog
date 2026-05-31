@@ -14,6 +14,7 @@ const CODEFORCES_API = 'https://codeforces.com/api';
 const ATCODER_PROBLEMS_API = 'https://kenkoooo.com/atcoder/atcoder-api';
 const REQUEST_TIMEOUT_MS = 15_000;
 const luoguPracticeRequests = new Map<string, Promise<LuoguPracticeResponse>>();
+const NOWCODER_PUBLIC_ORIGINS = ['https://api-cdn.nowcoder.com', 'https://www.nowcoder.com'];
 
 export interface TrackerProvider extends TrackerProviderDefinition {
   fetchSubmissions?: (handle: string) => Promise<OjSubmission[]>;
@@ -98,6 +99,10 @@ async function fetchJson<T>(url: string): Promise<T> {
   } finally {
     timeout.clear();
   }
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
 }
 
 function assertCodeforcesOk<T>(payload: CodeforcesResponse<T>) {
@@ -220,31 +225,36 @@ export async function fetchNowCoderSubmissionsFromPublicPage(userId: string): Pr
   const normalizedUserId = normalizeNowCoderUserId(userId);
   let lastError: unknown;
 
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    const url = `https://api-cdn.nowcoder.com/users/${encodeURIComponent(normalizedUserId)}/tests?__ojblog=${Date.now()}-${attempt}`;
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'zh-CN,zh;q=0.9',
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-      },
-    });
-    if (!response.ok) {
-      lastError = new Error(`牛客公开页 HTTP ${response.status}`);
-      continue;
-    }
+  for (const origin of NOWCODER_PUBLIC_ORIGINS) {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const url = `${origin}/users/${encodeURIComponent(normalizedUserId)}/tests?__ojblog=${Date.now()}-${attempt}`;
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'zh-CN,zh;q=0.9',
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          Referer: `https://www.nowcoder.com/users/${encodeURIComponent(normalizedUserId)}/tests`,
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        },
+      });
+      if (!response.ok) {
+        lastError = new Error(`牛客公开页 HTTP ${response.status}`);
+        continue;
+      }
 
-    try {
-      return parseNowCoderSubmissions(await response.text(), normalizedUserId);
-    } catch (error) {
-      lastError = error;
+      try {
+        return parseNowCoderSubmissions(await response.text(), normalizedUserId);
+      } catch (error) {
+        lastError = error;
+        if (attempt < 5) await sleep(350);
+      }
     }
   }
 
-  throw lastError instanceof Error ? lastError : new Error('牛客数据同步失败');
+  const reason = lastError instanceof Error ? lastError.message : '牛客数据同步失败';
+  throw new Error(`${reason}。请确认填写的是牛客个人主页数字 ID，且个人主页的做题动态可公开访问。`);
 }
 
 export async function fetchLuoguPractice(userId: string): Promise<LuoguPracticeResponse> {

@@ -107,6 +107,9 @@ export function parseNowCoderSubmissions(html: string, userId: string): OjSubmis
   const lists = Object.values(state.prefetchData ?? {})
     .flatMap((entry) => entry.list ?? [])
     .filter((record) => typeof record.id === 'number');
+  if (lists.length === 0) {
+    throw new Error('牛客公开页未返回刷题列表，可能是账号 ID 错误或做题动态未公开');
+  }
 
   return lists
     .map((record) => {
