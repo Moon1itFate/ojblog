@@ -30,6 +30,13 @@ import type {
 const ACCOUNT_STORAGE_KEY = 'ojblog:tracker:accounts';
 const SNAPSHOT_STORAGE_KEY = 'ojblog:tracker:snapshot';
 const AUTO_SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAY_LABELS = [
+  { label: 'Mon', row: 2 },
+  { label: 'Wed', row: 4 },
+  { label: 'Fri', row: 6 },
+];
 
 const emptyAccounts = createEmptyTrackerAccounts();
 
@@ -133,27 +140,97 @@ function SourceStatusList({ sources }: { sources: TrackerSourceStatus[] }) {
   );
 }
 
+function parseDayDate(date: string) {
+  return new Date(`${date}T00:00:00.000Z`);
+}
+
+function formatCalendarDate(date: string) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(parseDayDate(date));
+}
+
+function buildCalendarModel(days: ReturnType<typeof buildTrackerAnalytics>['activityDays']) {
+  const dayMap = new Map(days.map((day) => [day.date, day]));
+  const lastDay = days.at(-1);
+  const endDate = lastDay ? parseDayDate(lastDay.date) : new Date();
+  const startDate = new Date(endDate.getTime() - 364 * DAY_MS);
+  const gridStart = new Date(startDate);
+  gridStart.setUTCDate(startDate.getUTCDate() - startDate.getUTCDay());
+  const gridEnd = new Date(endDate);
+  gridEnd.setUTCDate(endDate.getUTCDate() + (6 - endDate.getUTCDay()));
+
+  const weeks: Array<Array<(typeof days)[number] | null>> = [];
+  const monthLabels: Array<{ label: string; column: number }> = [];
+  let current = new Date(gridStart);
+  let lastMonthColumn = -2;
+
+  while (current <= gridEnd) {
+    const weekIndex = Math.floor((current.getTime() - gridStart.getTime()) / (7 * DAY_MS));
+    const weekday = current.getUTCDay();
+    const key = current.toISOString().slice(0, 10);
+    const isVisibleRange = current >= startDate && current <= endDate;
+    weeks[weekIndex] ??= Array.from({ length: 7 }, () => null);
+    weeks[weekIndex][weekday] = isVisibleRange ? (dayMap.get(key) ?? null) : null;
+
+    if (current.getUTCDate() === 1 && isVisibleRange && weekIndex > lastMonthColumn + 1) {
+      monthLabels.push({ label: MONTH_LABELS[current.getUTCMonth()], column: weekIndex + 1 });
+      lastMonthColumn = weekIndex;
+    }
+
+    current = new Date(current.getTime() + DAY_MS);
+  }
+
+  return { weeks, monthLabels };
+}
+
 function ActivityCalendar({ days }: { days: ReturnType<typeof buildTrackerAnalytics>['activityDays'] }) {
+  const { weeks, monthLabels } = useMemo(() => buildCalendarModel(days), [days]);
+
   return (
-    <>
-      <div className="activity-calendar live">
-        {days.map((day) => (
-          <span
-            className={`activity-cell level-${day.level} ${day.wrong > 0 ? 'wrong' : ''}`}
-            key={day.date}
-            title={`${day.date}: AC ${day.solved}, 非 AC ${day.wrong}`}
-          />
+    <div className="activity-calendar-card">
+      <div
+        className="activity-months"
+        style={{ gridTemplateColumns: `repeat(${Math.max(weeks.length, 1)}, var(--activity-cell-size))` }}
+      >
+        {monthLabels.map((month) => (
+          <span key={`${month.label}-${month.column}`} style={{ gridColumn: month.column }}>
+            {month.label}
+          </span>
         ))}
       </div>
+      <div className="activity-body">
+        <div className="activity-weekdays">
+          {WEEKDAY_LABELS.map((day) => (
+            <span key={day.label} style={{ gridRow: day.row }}>
+              {day.label}
+            </span>
+          ))}
+        </div>
+        <div className="activity-calendar live">
+          {weeks.map((week, weekIndex) =>
+            week.map((day, weekdayIndex) => (
+              <span
+                className={`activity-cell ${day ? `level-${day.level}` : 'empty'} ${day && day.wrong > 0 ? 'wrong' : ''}`}
+                key={day?.date ?? `empty-${weekIndex}-${weekdayIndex}`}
+                title={day ? `${formatCalendarDate(day.date)}: AC ${day.solved}, 非 AC ${day.wrong}` : undefined}
+              />
+            )),
+          )}
+        </div>
+      </div>
       <div className="legend">
-        <span>少</span>
+        <span>Less</span>
+        <i className="level-0" />
         <i className="level-1" />
         <i className="level-2" />
         <i className="level-3" />
         <i className="level-4" />
-        <span>多</span>
+        <span>More</span>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -330,7 +407,7 @@ export default function OjTrackerApp() {
             <RiCalendarCheckLine />
             <div>
               <h2>真实刷题日历</h2>
-              <p>按最近 98 天提交记录统计，描边格子表示当天存在非 AC 提交。</p>
+              <p>按最近 365 天提交记录统计，描边格子表示当天存在非 AC 提交。</p>
             </div>
           </div>
           {analytics ? (

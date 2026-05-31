@@ -1,7 +1,7 @@
 import type { ActivityDay, OjSubmission, TrackerAnalytics, TrackerSnapshot, WeakSpot } from './types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const CALENDAR_DAYS = 98;
+const CALENDAR_DAYS = 365;
 
 const recommendationBank: Record<string, string[]> = {
   dp: ['AtCoder DP Contest N - Slimes', 'Codeforces 607B - Zuma'],
