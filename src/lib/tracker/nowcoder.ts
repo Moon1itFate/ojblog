@@ -2,6 +2,7 @@ import type { OjSubmission } from './types';
 
 const NOWCODER_PLATFORM = 'nowcoder';
 const NOWCODER_DEFAULT_TAGS = ['NowCoder / public activity'];
+const NOWCODER_USER_ID_PATTERN = /(?:nowcoder\.com\/users\/)?(\d+)/;
 
 interface NowCoderInitialState {
   prefetchData?: Record<
@@ -93,6 +94,12 @@ function normalizeNowCoderTime(time: number | null | undefined) {
 function buildNowCoderUrl(userId: string, record: NowCoderTestRecord) {
   if (record.paperId) return `https://www.nowcoder.com/users/${encodeURIComponent(userId)}/tests`;
   return `https://www.nowcoder.com/users/${encodeURIComponent(userId)}/tests`;
+}
+
+export function normalizeNowCoderUserId(input: string) {
+  const value = input.trim();
+  const matched = value.match(NOWCODER_USER_ID_PATTERN);
+  return matched?.[1] ?? value;
 }
 
 export function parseNowCoderSubmissions(html: string, userId: string): OjSubmission[] {

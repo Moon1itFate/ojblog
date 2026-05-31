@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
+import { normalizeNowCoderUserId } from '@/lib/tracker/nowcoder';
 import { fetchNowCoderSubmissionsFromPublicPage } from '@/lib/tracker/providers';
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ params }) => {
-  const userId = params.userId?.trim();
+  const userId = normalizeNowCoderUserId(params.userId ?? '');
   if (!userId || !/^\d+$/.test(userId)) {
     return Response.json({ error: '牛客 User ID 必须是个人主页中的数字 ID' }, { status: 400 });
   }

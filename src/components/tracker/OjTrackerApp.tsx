@@ -120,7 +120,7 @@ function hasAnyAccount(accounts: TrackerAccounts) {
 
 function SourceStatusList({ sources }: { sources: TrackerSourceStatus[] }) {
   return (
-    <div className="source-list" aria-label="数据源状态">
+    <div className="source-list">
       {sources.map((source, index) => (
         <span className={sourceClass(source.status)} key={`${source.platform}-${index}`}>
           <RiSignalTowerLine />
@@ -136,7 +136,7 @@ function SourceStatusList({ sources }: { sources: TrackerSourceStatus[] }) {
 function ActivityCalendar({ days }: { days: ReturnType<typeof buildTrackerAnalytics>['activityDays'] }) {
   return (
     <>
-      <div className="activity-calendar live" aria-label="真实刷题日历">
+      <div className="activity-calendar live">
         {days.map((day) => (
           <span
             className={`activity-cell level-${day.level} ${day.wrong > 0 ? 'wrong' : ''}`}
@@ -205,6 +205,7 @@ export default function OjTrackerApp() {
 
   const analytics = useMemo(() => safeBuildTrackerAnalytics(snapshot), [snapshot]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: restore cached tracker state only once on mount.
   useEffect(() => {
     const storedAccounts = loadJson<unknown>(ACCOUNT_STORAGE_KEY);
     const storedSnapshot = loadJson<unknown>(SNAPSHOT_STORAGE_KEY);
@@ -265,11 +266,11 @@ export default function OjTrackerApp() {
           <p className="tracker-kicker">Online OJ Tracker</p>
           <h1>把公网 OJ 记录同步成自己的算法成长仪表盘</h1>
           <p>
-            现在页面已经不是静态 MVP：填写账号后会从 Codeforces 官方 API 和 AtCoder Problems 公共接口拉取真实提交，
+            现在页面已经不是静态 MVP：填写账号后会从 Codeforces、AtCoder、牛客和洛谷等公开数据源拉取真实记录，
             自动生成刷题日历、错题标签、补题建议与比赛记录。下一阶段可以把这些快照写入云数据库，再交给大模型做长期分析。
           </p>
         </div>
-        <div className="hero-metrics" aria-label="刷题概览">
+        <div className="hero-metrics">
           <div>
             <span>{analytics?.summary.totalSolved ?? 0}</span>
             <small>已 AC 题目</small>
@@ -300,9 +301,7 @@ export default function OjTrackerApp() {
               <input
                 value={accounts[provider.platform] ?? ''}
                 placeholder={provider.accountPlaceholder}
-                onChange={(event) =>
-                  setAccounts((current) => ({ ...current, [provider.platform]: event.target.value }))
-                }
+                onChange={(event) => setAccounts((current) => ({ ...current, [provider.platform]: event.target.value }))}
               />
             </label>
           ))}
@@ -410,14 +409,14 @@ export default function OjTrackerApp() {
             <RiTimerFlashLine />
             <div>
               <h2>比赛追踪</h2>
-              <p>当前先接入 Codeforces rating contest，XCPC 行程源下一阶段接入。</p>
+              <p>当前已接入 Codeforces、AtCoder 和洛谷的公开比赛 / rating 记录，XCPC 行程源下一阶段接入。</p>
             </div>
           </div>
           <div className="contest-list">
             {snapshot && snapshot.contests.length > 0 ? (
               snapshot.contests.slice(0, 8).map((contest) => <ContestItem contest={contest} key={contest.id} />)
             ) : (
-              <div className="empty-state">同步 Codeforces 后会展示近期比赛记录。</div>
+              <div className="empty-state">同步支持比赛记录的平台后会展示近期比赛记录。</div>
             )}
           </div>
         </div>
@@ -446,7 +445,7 @@ export default function OjTrackerApp() {
           </article>
           <article>
             <strong>4. 比赛日程</strong>
-            <span>接入 Codeforces contest.list、AtCoder contest 页面与 XCPC 信息源。</span>
+            <span>继续扩展 Codeforces contest.list、AtCoder contest 页面与 XCPC 信息源。</span>
           </article>
         </div>
         <div className="recommendations">

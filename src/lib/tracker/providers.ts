@@ -1,4 +1,5 @@
-import { parseNowCoderSubmissions } from './nowcoder';
+import { normalizeLuoguUserId, parseLuoguPractice } from './luogu';
+import { normalizeNowCoderUserId, parseNowCoderSubmissions } from './nowcoder';
 import type {
   ContestRecord,
   OjPlatform,
@@ -12,6 +13,7 @@ import type {
 const CODEFORCES_API = 'https://codeforces.com/api';
 const ATCODER_PROBLEMS_API = 'https://kenkoooo.com/atcoder/atcoder-api';
 const REQUEST_TIMEOUT_MS = 15_000;
+const luoguPracticeRequests = new Map<string, Promise<LuoguPracticeResponse>>();
 
 export interface TrackerProvider extends TrackerProviderDefinition {
   fetchSubmissions?: (handle: string) => Promise<OjSubmission[]>;
@@ -69,6 +71,11 @@ interface AtCoderContestHistory {
   ContestName: string;
   ContestNameEn?: string;
   EndTime: string;
+}
+
+interface LuoguPracticeResponse {
+  submissions: OjSubmission[];
+  contests: ContestRecord[];
 }
 
 function createTimeoutSignal() {
@@ -203,16 +210,18 @@ export async function fetchAtCoderContests(handle: string): Promise<ContestRecor
 }
 
 export async function fetchNowCoderSubmissions(userId: string): Promise<OjSubmission[]> {
-  const url = `/api/tracker/nowcoder/${encodeURIComponent(userId)}/tests`;
+  const normalizedUserId = normalizeNowCoderUserId(userId);
+  const url = `/api/tracker/nowcoder/${encodeURIComponent(normalizedUserId)}/tests`;
   const payload = await fetchJson<{ submissions: OjSubmission[] }>(url);
   return payload.submissions;
 }
 
 export async function fetchNowCoderSubmissionsFromPublicPage(userId: string): Promise<OjSubmission[]> {
+  const normalizedUserId = normalizeNowCoderUserId(userId);
   let lastError: unknown;
 
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    const url = `https://api-cdn.nowcoder.com/users/${encodeURIComponent(userId)}/tests?__ojblog=${Date.now()}-${attempt}`;
+    const url = `https://api-cdn.nowcoder.com/users/${encodeURIComponent(normalizedUserId)}/tests?__ojblog=${Date.now()}-${attempt}`;
     const response = await fetch(url, {
       headers: {
         Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -229,13 +238,59 @@ export async function fetchNowCoderSubmissionsFromPublicPage(userId: string): Pr
     }
 
     try {
-      return parseNowCoderSubmissions(await response.text(), userId);
+      return parseNowCoderSubmissions(await response.text(), normalizedUserId);
     } catch (error) {
       lastError = error;
     }
   }
 
   throw lastError instanceof Error ? lastError : new Error('牛客数据同步失败');
+}
+
+export async function fetchLuoguPractice(userId: string): Promise<LuoguPracticeResponse> {
+  const normalizedUserId = normalizeLuoguUserId(userId);
+  const existingRequest = luoguPracticeRequests.get(normalizedUserId);
+  if (existingRequest) return existingRequest;
+
+  const url = `/api/tracker/luogu/${encodeURIComponent(normalizedUserId)}/practice`;
+  const request = fetchJson<LuoguPracticeResponse>(url);
+  luoguPracticeRequests.set(normalizedUserId, request);
+
+  try {
+    return await request;
+  } finally {
+    luoguPracticeRequests.delete(normalizedUserId);
+  }
+}
+
+export async function fetchLuoguSubmissions(userId: string): Promise<OjSubmission[]> {
+  const payload = await fetchLuoguPractice(userId);
+  return payload.submissions;
+}
+
+export async function fetchLuoguContests(userId: string): Promise<ContestRecord[]> {
+  const payload = await fetchLuoguPractice(userId);
+  return payload.contests;
+}
+
+export async function fetchLuoguPracticeFromPublicPage(userId: string): Promise<LuoguPracticeResponse> {
+  const normalizedUserId = normalizeLuoguUserId(userId);
+  const fetchedAt = new Date().toISOString();
+  const response = await fetch(`https://www.luogu.com.cn/user/${encodeURIComponent(normalizedUserId)}/practice`, {
+    headers: {
+      Accept: 'application/json',
+      Referer: 'https://www.luogu.com.cn/',
+      'User-Agent': 'ojblog/0.2 (+https://github.com/Moon1itFate/ojblog)',
+      'x-lentille-request': 'content-only',
+      'x-luogu-type': 'content-only',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`洛谷公开练习记录 HTTP ${response.status}`);
+  }
+
+  return parseLuoguPractice(await response.json(), fetchedAt);
 }
 
 export const trackerProviders: TrackerProvider[] = [
@@ -269,13 +324,26 @@ export const trackerProviders: TrackerProvider[] = [
     platform: 'nowcoder',
     name: '牛客',
     accountLabel: '牛客 User ID',
-    accountPlaceholder: '例如 251475259（个人主页数字 ID）',
+    accountPlaceholder: '例如 251475259 或个人主页链接',
     homepage: 'https://www.nowcoder.com',
     supports: {
       submissions: true,
       contests: false,
     },
     fetchSubmissions: fetchNowCoderSubmissions,
+  },
+  {
+    platform: 'luogu',
+    name: '洛谷',
+    accountLabel: '洛谷 UID',
+    accountPlaceholder: '例如 206953 或个人主页链接',
+    homepage: 'https://www.luogu.com.cn',
+    supports: {
+      submissions: true,
+      contests: true,
+    },
+    fetchSubmissions: fetchLuoguSubmissions,
+    fetchContests: fetchLuoguContests,
   },
 ];
 
