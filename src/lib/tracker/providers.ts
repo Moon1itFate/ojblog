@@ -1,5 +1,13 @@
 import { normalizeLuoguUserId, parseLuoguPractice } from './luogu';
-import { normalizeNowCoderUserId, parseNowCoderAcmPracticeSubmissions, parseNowCoderSubmissions } from './nowcoder';
+import {
+  mapNowCoderOnlineProgramRecords,
+  mapNowCoderTestRecords,
+  type NowCoderOnlineProgramRecord,
+  type NowCoderTestRecord,
+  normalizeNowCoderUserId,
+  parseNowCoderAcmPracticeSubmissions,
+  parseNowCoderSubmissions,
+} from './nowcoder';
 import type {
   ContestRecord,
   OjPlatform,
@@ -16,8 +24,11 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const luoguPracticeRequests = new Map<string, Promise<LuoguPracticeResponse>>();
 const NOWCODER_PUBLIC_ORIGINS = ['https://api-cdn.nowcoder.com', 'https://www.nowcoder.com'];
 const NOWCODER_ACM_ORIGIN = 'https://ac.nowcoder.com';
+const NOWCODER_GATEWAY_ORIGIN = 'https://gw-c.nowcoder.com';
 const NOWCODER_ACM_PAGE_SIZE = 50;
 const NOWCODER_ACM_MAX_PAGES = 50;
+const NOWCODER_PROFILE_PAGE_SIZE = 100;
+const NOWCODER_PROFILE_MAX_PAGES = 50;
 const NOWCODER_PAGE_TIMEOUT_MS = 10_000;
 const NOWCODER_PUBLIC_ATTEMPTS = 2;
 
@@ -84,6 +95,21 @@ interface LuoguPracticeResponse {
   contests: ContestRecord[];
 }
 
+interface NowCoderGatewayResponse<T> {
+  success?: boolean;
+  code?: number;
+  msg?: string;
+  data?: T;
+}
+
+interface NowCoderGatewayPage<T> {
+  current?: number;
+  size?: number;
+  total?: number;
+  totalPage?: number;
+  records?: T[];
+}
+
 function createTimeoutSignal(timeoutMs = REQUEST_TIMEOUT_MS) {
   const controller = new AbortController();
   const timeout = globalThis.setTimeout(() => controller.abort(), timeoutMs);
@@ -101,6 +127,34 @@ async function fetchJson<T>(url: string): Promise<T> {
       throw new Error(`HTTP ${response.status}`);
     }
     return (await response.json()) as T;
+  } finally {
+    timeout.clear();
+  }
+}
+
+async function fetchNowCoderGatewayJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const timeout = createTimeoutSignal(REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(`${NOWCODER_GATEWAY_ORIGIN}${path}`, {
+      ...init,
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        Referer: 'https://www.nowcoder.com/',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        ...init.headers,
+      },
+      signal: timeout.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`牛客主页接口 HTTP ${response.status}`);
+    }
+
+    const payload = (await response.json()) as NowCoderGatewayResponse<T>;
+    if (payload.success === false || (payload.code ?? 0) >= 400 || !payload.data) {
+      throw new Error(payload.msg || `牛客主页接口返回异常 ${payload.code ?? ''}`.trim());
+    }
+    return payload.data;
   } finally {
     timeout.clear();
   }
@@ -328,15 +382,69 @@ async function fetchNowCoderAcmPracticeSubmissions(normalizedUserId: string): Pr
   );
 }
 
-export async function fetchNowCoderSubmissionsFromPublicPage(userId: string): Promise<OjSubmission[]> {
-  const normalizedUserId = normalizeNowCoderUserId(userId);
-  let lastError: unknown;
+function getNowCoderProfilePages(total: number | undefined) {
+  if (!total || total < 1) return 1;
+  return Math.min(Math.ceil(total / NOWCODER_PROFILE_PAGE_SIZE), NOWCODER_PROFILE_MAX_PAGES);
+}
 
-  try {
-    return await fetchNowCoderAcmPracticeSubmissions(normalizedUserId);
-  } catch (error) {
-    lastError = error;
+async function fetchNowCoderTestPaperPage(normalizedUserId: string, page: number) {
+  const params = new URLSearchParams({
+    pageNo: String(page),
+    pageSize: String(NOWCODER_PROFILE_PAGE_SIZE),
+    onlyFinish: 'false',
+  });
+  return fetchNowCoderGatewayJson<NowCoderGatewayPage<NowCoderTestRecord>>(
+    `/api/sparta/user/question-training/test-papers/${encodeURIComponent(normalizedUserId)}?${params.toString()}`,
+  );
+}
+
+async function fetchNowCoderOnlineProgramPage(normalizedUserId: string, page: number) {
+  return fetchNowCoderGatewayJson<NowCoderGatewayPage<NowCoderOnlineProgramRecord>>(
+    '/api/sparta/user/question-training/submission-history',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json;charset=UTF-8' },
+      body: JSON.stringify({
+        pageNo: page,
+        pageSize: NOWCODER_PROFILE_PAGE_SIZE,
+        userId: Number(normalizedUserId),
+      }),
+    },
+  );
+}
+
+async function fetchNowCoderPagedRecords<T>(fetchPage: (page: number) => Promise<NowCoderGatewayPage<T>>) {
+  const firstPage = await fetchPage(1);
+  const totalPages = getNowCoderProfilePages(firstPage.total);
+  const restResults = await Promise.allSettled(
+    Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) => fetchPage(index + 2)),
+  );
+  const restPages = restResults.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+  return [firstPage, ...restPages].flatMap((page) => page.records ?? []);
+}
+
+async function fetchNowCoderProfileSubmissions(normalizedUserId: string): Promise<OjSubmission[]> {
+  const [testPaperResult, onlineProgramResult] = await Promise.allSettled([
+    fetchNowCoderPagedRecords((page) => fetchNowCoderTestPaperPage(normalizedUserId, page)),
+    fetchNowCoderPagedRecords((page) => fetchNowCoderOnlineProgramPage(normalizedUserId, page)),
+  ]);
+  const testPaperRecords: NowCoderTestRecord[] = testPaperResult.status === 'fulfilled' ? testPaperResult.value : [];
+  const onlineProgramRecords: NowCoderOnlineProgramRecord[] =
+    onlineProgramResult.status === 'fulfilled' ? onlineProgramResult.value : [];
+
+  const submissions = [
+    ...mapNowCoderTestRecords(testPaperRecords, normalizedUserId),
+    ...mapNowCoderOnlineProgramRecords(onlineProgramRecords, normalizedUserId),
+  ];
+  if (submissions.length === 0) {
+    throw new Error('牛客主页未返回公开刷题数据，可能是账号 ID 错误或刷题动态未公开');
   }
+
+  return submissions;
+}
+
+async function fetchNowCoderLegacyProfileSubmissions(normalizedUserId: string): Promise<OjSubmission[]> {
+  let lastError: unknown;
 
   for (const origin of NOWCODER_PUBLIC_ORIGINS) {
     for (let attempt = 0; attempt < NOWCODER_PUBLIC_ATTEMPTS; attempt += 1) {
@@ -370,6 +478,25 @@ export async function fetchNowCoderSubmissionsFromPublicPage(userId: string): Pr
     }
   }
 
+  throw lastError instanceof Error ? lastError : new Error('牛客主页公开数据同步失败');
+}
+
+function mergeNowCoderSubmissions(submissions: OjSubmission[]) {
+  return Array.from(new Map(submissions.map((submission) => [submission.id, submission])).values()).sort(
+    (a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt),
+  );
+}
+
+export async function fetchNowCoderSubmissionsFromPublicPage(userId: string): Promise<OjSubmission[]> {
+  const normalizedUserId = normalizeNowCoderUserId(userId);
+  const results = await Promise.allSettled([
+    fetchNowCoderProfileSubmissions(normalizedUserId).catch(() => fetchNowCoderLegacyProfileSubmissions(normalizedUserId)),
+    fetchNowCoderAcmPracticeSubmissions(normalizedUserId),
+  ]);
+  const submissions = results.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
+  if (submissions.length > 0) return mergeNowCoderSubmissions(submissions);
+
+  const lastError = results.find((result): result is PromiseRejectedResult => result.status === 'rejected')?.reason;
   const reason = lastError instanceof Error ? lastError.message : '牛客数据同步失败';
   throw new Error(`${reason}。请确认填写的是牛客个人主页数字 ID，或牛客竞赛主页 /acm/contest/profile/{id}，且记录可公开访问。`);
 }

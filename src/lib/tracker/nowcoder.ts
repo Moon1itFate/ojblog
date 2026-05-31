@@ -2,6 +2,8 @@ import type { OjSubmission } from './types';
 
 const NOWCODER_PLATFORM = 'nowcoder';
 const NOWCODER_DEFAULT_TAGS = ['NowCoder / public activity'];
+const NOWCODER_TEST_PAPER_TAGS = ['NowCoder / test paper'];
+const NOWCODER_ONLINE_PROGRAM_TAGS = ['NowCoder / online programming'];
 const NOWCODER_ACM_TAGS = ['NowCoder ACM / practice'];
 const NOWCODER_USER_ID_PATTERN = /(?:nowcoder\.com\/users\/|ac\.nowcoder\.com\/acm\/contest\/profile\/)?(\d+)/;
 
@@ -14,7 +16,7 @@ interface NowCoderInitialState {
   >;
 }
 
-interface NowCoderTestRecord {
+export interface NowCoderTestRecord {
   id: number;
   paperId?: number;
   name?: string;
@@ -25,6 +27,30 @@ interface NowCoderTestRecord {
   participatedCnt?: number;
   status?: number;
   rightRate?: number | null;
+}
+
+export interface NowCoderOnlineProgramRecord {
+  problem?: {
+    questionId?: number;
+    questionNum?: string;
+    id?: number;
+    questionUuid?: string;
+    title?: string;
+  };
+  accept?: boolean;
+  submission?: {
+    timeConsumption?: number;
+    createdDate?: number;
+    memoryConsumption?: number;
+    language?: number;
+    id?: number;
+  };
+  language?: string;
+  status?: {
+    memo?: string;
+    value?: number;
+    desc?: string;
+  };
 }
 
 function decodeHtmlEntities(value: string) {
@@ -99,14 +125,22 @@ function extractInitialState(html: string): NowCoderInitialState {
   return JSON.parse(decodeHtmlEntities(raw)) as NowCoderInitialState;
 }
 
-function normalizeNowCoderTime(time: number | null | undefined) {
-  if (!time) return new Date().toISOString();
+function normalizeNowCoderTime(time: number | null | undefined, fallback = new Date().toISOString()) {
+  if (!time) return fallback;
   return new Date(time).toISOString();
 }
 
 function buildNowCoderUrl(userId: string, record: NowCoderTestRecord) {
   if (record.paperId) return `https://www.nowcoder.com/users/${encodeURIComponent(userId)}/tests`;
   return `https://www.nowcoder.com/users/${encodeURIComponent(userId)}/tests`;
+}
+
+function buildNowCoderOnlineProgramUrl(userId: string, record: NowCoderOnlineProgramRecord) {
+  const submissionId = record.submission?.id;
+  if (!submissionId) return `https://www.nowcoder.com/users/${encodeURIComponent(userId)}/tests?type=2`;
+  return `https://www.nowcoder.com/profile/${encodeURIComponent(userId)}/codeBookDetail?submissionId=${encodeURIComponent(
+    submissionId,
+  )}`;
 }
 
 function extractTableCells(rowHtml: string) {
@@ -133,6 +167,62 @@ export function normalizeNowCoderUserId(input: string) {
   return matched?.[1] ?? value;
 }
 
+export function mapNowCoderTestRecords(records: NowCoderTestRecord[], userId: string): OjSubmission[] {
+  return records
+    .filter(
+      (record) =>
+        typeof record.id === 'number' &&
+        (typeof record.time === 'number' || record.finish || (record.score ?? 0) > 0 || (record.participatedCnt ?? 0) > 0),
+    )
+    .map((record) => {
+      const problemKey = record.paperId ? String(record.paperId) : String(record.id);
+      const name = record.name?.trim() || `牛客试卷记录 ${record.id}`;
+      const verdict = record.finish ? 'FINISHED' : 'IN_PROGRESS';
+      return {
+        id: `${NOWCODER_PLATFORM}-paper:${record.id}`,
+        platform: NOWCODER_PLATFORM,
+        problemKey,
+        problemName: name,
+        contestId: record.paperId ? String(record.paperId) : undefined,
+        verdict,
+        accepted: Boolean(record.finish && (record.score ?? 0) > 0),
+        tags: NOWCODER_TEST_PAPER_TAGS,
+        rating: undefined,
+        language: undefined,
+        submittedAt: normalizeNowCoderTime(record.time, '1970-01-01T00:00:00.000Z'),
+        sourceUrl: buildNowCoderUrl(userId, record),
+      } satisfies OjSubmission;
+    })
+    .sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt));
+}
+
+export function mapNowCoderOnlineProgramRecords(records: NowCoderOnlineProgramRecord[], userId: string): OjSubmission[] {
+  return records
+    .filter((record) => typeof record.submission?.id === 'number')
+    .map((record) => {
+      const problem = record.problem ?? {};
+      const submission = record.submission ?? {};
+      const problemKey = problem.questionNum || String(problem.id ?? problem.questionId ?? submission.id);
+      const title = problem.title?.trim() || `牛客在线编程 ${problemKey}`;
+      const verdict = record.status?.desc?.trim() || (record.accept ? '答案正确' : 'UNKNOWN');
+      return {
+        id: `${NOWCODER_PLATFORM}-online:${submission.id}`,
+        platform: NOWCODER_PLATFORM,
+        problemKey,
+        problemName: `${problemKey} - ${title}`,
+        contestId: problem.id ? String(problem.id) : undefined,
+        verdict,
+        accepted: Boolean(record.accept || record.status?.value === 5 || verdict.includes('答案正确')),
+        tags: NOWCODER_ONLINE_PROGRAM_TAGS,
+        rating: undefined,
+        language: record.language,
+        submittedAt: normalizeNowCoderTime(submission.createdDate),
+        sourceUrl: buildNowCoderOnlineProgramUrl(userId, record),
+      } satisfies OjSubmission;
+    })
+    .sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt));
+}
+
 export function parseNowCoderSubmissions(html: string, userId: string): OjSubmission[] {
   const state = extractInitialState(html);
   const lists = Object.values(state.prefetchData ?? {})
@@ -142,27 +232,11 @@ export function parseNowCoderSubmissions(html: string, userId: string): OjSubmis
     throw new Error('牛客公开页未返回刷题列表，可能是账号 ID 错误或做题动态未公开');
   }
 
-  return lists
-    .map((record) => {
-      const problemKey = record.paperId ? String(record.paperId) : String(record.id);
-      const name = record.name?.trim() || `牛客刷题记录 ${record.id}`;
-      const verdict = record.finish ? 'FINISHED' : 'IN_PROGRESS';
-      return {
-        id: `${NOWCODER_PLATFORM}:${record.id}`,
-        platform: NOWCODER_PLATFORM,
-        problemKey,
-        problemName: name,
-        contestId: record.paperId ? String(record.paperId) : undefined,
-        verdict,
-        accepted: Boolean(record.finish && (record.score ?? 0) > 0),
-        tags: NOWCODER_DEFAULT_TAGS,
-        rating: undefined,
-        language: undefined,
-        submittedAt: normalizeNowCoderTime(record.time),
-        sourceUrl: buildNowCoderUrl(userId, record),
-      } satisfies OjSubmission;
-    })
-    .sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt));
+  return mapNowCoderTestRecords(lists, userId).map((submission) => ({
+    ...submission,
+    id: submission.id.replace(`${NOWCODER_PLATFORM}-paper:`, `${NOWCODER_PLATFORM}:`),
+    tags: NOWCODER_DEFAULT_TAGS,
+  }));
 }
 
 export function parseNowCoderAcmPracticeSubmissions(html: string, userId: string): OjSubmission[] {
