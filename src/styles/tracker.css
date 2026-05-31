@@ -324,27 +324,27 @@
 
 .activity-cell.level-0,
 .legend .level-0 {
-  background: #ebedf0;
+  background: #f2eaf0;
 }
 
 .activity-cell.level-1,
 .legend .level-1 {
-  background: #9be9a8;
+  background: #ffd8e8;
 }
 
 .activity-cell.level-2,
 .legend .level-2 {
-  background: #40c463;
+  background: #ffacd2;
 }
 
 .activity-cell.level-3,
 .legend .level-3 {
-  background: #30a14e;
+  background: #ff7eb8;
 }
 
 .activity-cell.level-4,
 .legend .level-4 {
-  background: #216e39;
+  background: #d94d95;
 }
 
 .activity-cell.wrong {
@@ -378,6 +378,179 @@
 .dark .activity-cell.level-0,
 .dark .legend .level-0 {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.ai-summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.skill-profile,
+.daily-challenge {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.58);
+  padding: 1rem;
+}
+
+.dark .skill-profile,
+.dark .daily-challenge {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.skill-profile {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.skill-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+}
+
+.skill-score span {
+  color: #e45e9f;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 950;
+  line-height: 1;
+}
+
+.skill-score strong {
+  font-size: 1.1rem;
+}
+
+.skill-profile p,
+.daily-challenge p,
+.daily-submit small {
+  margin: 0;
+  color: rgba(65, 49, 59, 0.66);
+  line-height: 1.65;
+}
+
+.dark .skill-profile p,
+.dark .daily-challenge p,
+.dark .daily-submit small,
+.dark .profile-columns li,
+.dark .next-actions span {
+  color: rgba(246, 237, 244, 0.72);
+}
+
+.profile-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.profile-columns h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.92rem;
+}
+
+.profile-columns ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.profile-columns li {
+  color: rgba(65, 49, 59, 0.68);
+  line-height: 1.55;
+}
+
+.next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.next-actions span,
+.daily-meta span {
+  border-radius: 999px;
+  background: rgba(228, 94, 159, 0.12);
+  padding: 0.35rem 0.6rem;
+  color: #b93f7c;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.daily-challenge {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(260px, 1.08fr);
+  gap: 1rem;
+}
+
+.daily-label {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(143, 220, 255, 0.22);
+  padding: 0.3rem 0.58rem;
+  color: #3b86a8;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.daily-challenge h3 {
+  margin: 0.65rem 0 0.45rem;
+  font-size: 1.3rem;
+}
+
+.daily-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.daily-submit {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.daily-submit textarea {
+  min-height: 126px;
+  resize: vertical;
+  border: 1px solid rgba(228, 94, 159, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.68);
+  padding: 0.8rem;
+  color: inherit;
+  line-height: 1.6;
+}
+
+.dark .daily-submit textarea {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.daily-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.daily-actions a,
+.daily-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.62rem 0.9rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.daily-actions a {
+  background: linear-gradient(135deg, #e45e9f, #8fdcff);
+  color: #fff;
+}
+
+.daily-actions button {
+  cursor: not-allowed;
+  background: rgba(148, 163, 184, 0.18);
+  color: rgba(65, 49, 59, 0.55);
 }
 
 .weak-list {
@@ -590,6 +763,11 @@
   }
 
   .sync-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-challenge,
+  .profile-columns {
     grid-template-columns: 1fr;
   }
 }

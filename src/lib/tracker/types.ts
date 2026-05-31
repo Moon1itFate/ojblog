@@ -83,10 +83,31 @@ export interface TrackerSummary {
   lastAcceptedAt?: string;
 }
 
+export interface SkillProfile {
+  score: number;
+  level: string;
+  summary: string;
+  strengths: string[];
+  gaps: string[];
+  nextActions: string[];
+}
+
+export interface DailyChallenge {
+  title: string;
+  sourceName: string;
+  url?: string;
+  targetTag: string;
+  difficulty: string;
+  reason: string;
+  submitHint: string;
+}
+
 export interface TrackerAnalytics {
   summary: TrackerSummary;
   activityDays: ActivityDay[];
   weakSpots: WeakSpot[];
+  skillProfile: SkillProfile;
+  dailyChallenge: DailyChallenge;
   recentSubmissions: OjSubmission[];
   recommendedProblems: string[];
 }

@@ -234,6 +234,84 @@ function ActivityCalendar({ days }: { days: ReturnType<typeof buildTrackerAnalyt
   );
 }
 
+function DailyChallengeCard({ analytics }: { analytics: TrackerAnalytics }) {
+  const challenge = analytics.dailyChallenge;
+
+  return (
+    <article className="daily-challenge">
+      <div className="daily-challenge-main">
+        <span className="daily-label">每日一题</span>
+        <h3>{challenge.title}</h3>
+        <p>{challenge.reason}</p>
+        <div className="daily-meta">
+          <span>{challenge.sourceName}</span>
+          <span>{challenge.targetTag}</span>
+          <span>{challenge.difficulty}</span>
+        </div>
+      </div>
+      <div className="daily-submit">
+        <textarea
+          aria-label="每日一题代码草稿"
+          placeholder="这里可以先写思路或代码草稿。真正提交仍需要跳转到原 OJ，提交后再回到博客同步结果。"
+        />
+        <div className="daily-actions">
+          {challenge.url ? (
+            <a href={challenge.url} target="_blank" rel="noreferrer">
+              打开原题
+              <RiExternalLinkLine />
+            </a>
+          ) : (
+            <span>等待题源链接</span>
+          )}
+          <button type="button" disabled title="直接提交到原 OJ 需要账号授权、CSRF 与平台提交 API 支持">
+            原站提交待接入
+          </button>
+        </div>
+        <small>{challenge.submitHint}</small>
+      </div>
+    </article>
+  );
+}
+
+function SkillProfilePanel({ analytics }: { analytics: TrackerAnalytics }) {
+  const profile = analytics.skillProfile;
+
+  return (
+    <div className="skill-profile">
+      <div className="skill-score">
+        <span>{profile.score}</span>
+        <strong>{profile.level}</strong>
+      </div>
+      <p>{profile.summary}</p>
+      <div className="profile-columns">
+        <div>
+          <h3>当前优势</h3>
+          <ul>
+            {profile.strengths.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h3>主要不足</h3>
+          <ul>
+            {profile.gaps.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="next-actions">
+        {profile.nextActions.map((item, index) => (
+          <span key={item}>
+            {index + 1}. {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RecentSubmissionRow({ submission }: { submission: OjSubmission }) {
   return (
     <tr>
@@ -421,30 +499,38 @@ export default function OjTrackerApp() {
           <div className="panel-title">
             <RiRobot2Line />
             <div>
-              <h2>弱点分析</h2>
-              <p>先用错题标签做规则分析，后续可接入大模型生成复盘文本。</p>
+              <h2>AI 总结与每日一题</h2>
+              <p>根据已做题和错题生成水平画像、薄弱项、训练动作，并给出可以跳转原 OJ 提交的每日一题。</p>
             </div>
           </div>
-          <div className="weak-list">
-            {analytics && analytics.weakSpots.length > 0 ? (
-              analytics.weakSpots.map((item) => (
-                <article key={item.tag}>
-                  <div className="weak-head">
-                    <span>{item.tag}</span>
-                    <strong>{item.score}</strong>
-                  </div>
-                  <p>
-                    非 AC {item.wrongCount} 次，AC {item.solvedCount} 次。{item.action}
-                  </p>
-                  <div className="weak-bar">
-                    <i style={{ width: `${Math.max(12, item.score)}%` }} />
-                  </div>
-                </article>
-              ))
-            ) : (
-              <div className="empty-state">还没有足够错题数据，先同步或继续刷题。</div>
-            )}
-          </div>
+          {analytics ? (
+            <div className="ai-summary">
+              <SkillProfilePanel analytics={analytics} />
+              <DailyChallengeCard analytics={analytics} />
+              <div className="weak-list">
+                {analytics.weakSpots.length > 0 ? (
+                  analytics.weakSpots.map((item) => (
+                    <article key={item.tag}>
+                      <div className="weak-head">
+                        <span>{item.tag}</span>
+                        <strong>{item.score}</strong>
+                      </div>
+                      <p>
+                        非 AC {item.wrongCount} 次，AC {item.solvedCount} 次。{item.action}
+                      </p>
+                      <div className="weak-bar">
+                        <i style={{ width: `${Math.max(12, item.score)}%` }} />
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <div className="empty-state">还没有足够错题数据，先同步或继续刷题。</div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="empty-state">同步账号后，这里会生成水平画像、薄弱项和每日一题。</div>
+          )}
         </div>
       </section>
 
