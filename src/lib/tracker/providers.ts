@@ -12,12 +12,14 @@ import type {
 
 const CODEFORCES_API = 'https://codeforces.com/api';
 const ATCODER_PROBLEMS_API = 'https://kenkoooo.com/atcoder/atcoder-api';
-const REQUEST_TIMEOUT_MS = 15_000;
+const REQUEST_TIMEOUT_MS = 30_000;
 const luoguPracticeRequests = new Map<string, Promise<LuoguPracticeResponse>>();
 const NOWCODER_PUBLIC_ORIGINS = ['https://api-cdn.nowcoder.com', 'https://www.nowcoder.com'];
 const NOWCODER_ACM_ORIGIN = 'https://ac.nowcoder.com';
 const NOWCODER_ACM_PAGE_SIZE = 50;
 const NOWCODER_ACM_MAX_PAGES = 50;
+const NOWCODER_PAGE_TIMEOUT_MS = 10_000;
+const NOWCODER_PUBLIC_ATTEMPTS = 2;
 
 export interface TrackerProvider extends TrackerProviderDefinition {
   fetchSubmissions?: (handle: string) => Promise<OjSubmission[]>;
@@ -82,9 +84,9 @@ interface LuoguPracticeResponse {
   contests: ContestRecord[];
 }
 
-function createTimeoutSignal() {
+function createTimeoutSignal(timeoutMs = REQUEST_TIMEOUT_MS) {
   const controller = new AbortController();
-  const timeout = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = globalThis.setTimeout(() => controller.abort(), timeoutMs);
   return { signal: controller.signal, clear: () => globalThis.clearTimeout(timeout) };
 }
 
@@ -101,6 +103,34 @@ async function fetchJson<T>(url: string): Promise<T> {
     return (await response.json()) as T;
   } finally {
     timeout.clear();
+  }
+}
+
+function normalizeTextEncoding(value?: string | null) {
+  if (!value) return undefined;
+  const normalized = value.trim().toLowerCase().replaceAll('_', '-');
+  if (['gbk', 'gb2312', 'gb18030'].includes(normalized)) return 'gb18030';
+  if (['utf8', 'utf-8'].includes(normalized)) return 'utf-8';
+  return normalized;
+}
+
+function getHeaderEncoding(response: Response) {
+  const contentType = response.headers.get('content-type');
+  return normalizeTextEncoding(contentType?.match(/charset=([^;\s]+)/i)?.[1]);
+}
+
+function getHtmlEncoding(bytes: Uint8Array) {
+  const head = new TextDecoder('latin1').decode(bytes.slice(0, 4096));
+  return normalizeTextEncoding(head.match(/<meta\b[^>]*charset=["']?([^"'\s/>]+)/i)?.[1]);
+}
+
+async function readHtmlResponse(response: Response, fallbackEncoding = 'utf-8') {
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  const encoding = getHeaderEncoding(response) ?? getHtmlEncoding(bytes) ?? fallbackEncoding;
+  try {
+    return new TextDecoder(encoding).decode(bytes);
+  } catch {
+    return new TextDecoder(fallbackEncoding).decode(bytes);
   }
 }
 
@@ -250,28 +280,32 @@ async function fetchNowCoderAcmPracticePage(normalizedUserId: string, page: numb
 
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const url = buildNowCoderAcmPracticeUrl(normalizedUserId, page, attempt);
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'zh-CN,zh;q=0.9',
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
-        Referer: `${NOWCODER_ACM_ORIGIN}/acm/contest/profile/${encodeURIComponent(normalizedUserId)}`,
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-      },
-    });
-
-    if (!response.ok) {
-      lastError = new Error(`牛客 ACM 公开练习页第 ${page} 页 HTTP ${response.status}`);
-      continue;
-    }
-
+    const timeout = createTimeoutSignal(NOWCODER_PAGE_TIMEOUT_MS);
     try {
-      return await response.text();
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'zh-CN,zh;q=0.9',
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          Referer: `${NOWCODER_ACM_ORIGIN}/acm/contest/profile/${encodeURIComponent(normalizedUserId)}`,
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        },
+        signal: timeout.signal,
+      });
+
+      if (!response.ok) {
+        lastError = new Error(`牛客 ACM 公开练习页第 ${page} 页 HTTP ${response.status}`);
+        continue;
+      }
+
+      return await readHtmlResponse(response, 'gb18030');
     } catch (error) {
       lastError = error;
       if (attempt < 3) await sleep(350);
+    } finally {
+      timeout.clear();
     }
   }
 
@@ -281,11 +315,12 @@ async function fetchNowCoderAcmPracticePage(normalizedUserId: string, page: numb
 async function fetchNowCoderAcmPracticeSubmissions(normalizedUserId: string): Promise<OjSubmission[]> {
   const firstPageHtml = await fetchNowCoderAcmPracticePage(normalizedUserId, 1);
   const totalPages = getNowCoderAcmTotalPages(firstPageHtml);
-  const pages = [firstPageHtml];
-
-  for (let page = 2; page <= totalPages; page += 1) {
-    pages.push(await fetchNowCoderAcmPracticePage(normalizedUserId, page));
-  }
+  const restPages = await Promise.all(
+    Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) =>
+      fetchNowCoderAcmPracticePage(normalizedUserId, index + 2),
+    ),
+  );
+  const pages = [firstPageHtml, ...restPages];
 
   const submissions = pages.flatMap((html) => parseNowCoderAcmPracticeSubmissions(html, normalizedUserId));
   return Array.from(new Map(submissions.map((submission) => [submission.id, submission])).values()).sort(
@@ -297,38 +332,42 @@ export async function fetchNowCoderSubmissionsFromPublicPage(userId: string): Pr
   const normalizedUserId = normalizeNowCoderUserId(userId);
   let lastError: unknown;
 
-  for (const origin of NOWCODER_PUBLIC_ORIGINS) {
-    for (let attempt = 0; attempt < 6; attempt += 1) {
-      const url = `${origin}/users/${encodeURIComponent(normalizedUserId)}/tests?__ojblog=${Date.now()}-${attempt}`;
-      const response = await fetch(url, {
-        headers: {
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'zh-CN,zh;q=0.9',
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-          Referer: `https://www.nowcoder.com/users/${encodeURIComponent(normalizedUserId)}/tests`,
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        },
-      });
-      if (!response.ok) {
-        lastError = new Error(`牛客公开页 HTTP ${response.status}`);
-        continue;
-      }
-
-      try {
-        return parseNowCoderSubmissions(await response.text(), normalizedUserId);
-      } catch (error) {
-        lastError = error;
-        if (attempt < 5) await sleep(350);
-      }
-    }
-  }
-
   try {
     return await fetchNowCoderAcmPracticeSubmissions(normalizedUserId);
   } catch (error) {
     lastError = error;
+  }
+
+  for (const origin of NOWCODER_PUBLIC_ORIGINS) {
+    for (let attempt = 0; attempt < NOWCODER_PUBLIC_ATTEMPTS; attempt += 1) {
+      const url = `${origin}/users/${encodeURIComponent(normalizedUserId)}/tests?__ojblog=${Date.now()}-${attempt}`;
+      const timeout = createTimeoutSignal(NOWCODER_PAGE_TIMEOUT_MS);
+      try {
+        const response = await fetch(url, {
+          headers: {
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9',
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+            Referer: `https://www.nowcoder.com/users/${encodeURIComponent(normalizedUserId)}/tests`,
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+          },
+          signal: timeout.signal,
+        });
+        if (!response.ok) {
+          lastError = new Error(`牛客公开页 HTTP ${response.status}`);
+          continue;
+        }
+
+        return parseNowCoderSubmissions(await readHtmlResponse(response, 'utf-8'), normalizedUserId);
+      } catch (error) {
+        lastError = error;
+        if (attempt < NOWCODER_PUBLIC_ATTEMPTS - 1) await sleep(350);
+      } finally {
+        timeout.clear();
+      }
+    }
   }
 
   const reason = lastError instanceof Error ? lastError.message : '牛客数据同步失败';
