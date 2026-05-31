@@ -2,7 +2,8 @@ import type { OjSubmission } from './types';
 
 const NOWCODER_PLATFORM = 'nowcoder';
 const NOWCODER_DEFAULT_TAGS = ['NowCoder / public activity'];
-const NOWCODER_USER_ID_PATTERN = /(?:nowcoder\.com\/users\/)?(\d+)/;
+const NOWCODER_ACM_TAGS = ['NowCoder ACM / practice'];
+const NOWCODER_USER_ID_PATTERN = /(?:nowcoder\.com\/users\/|ac\.nowcoder\.com\/acm\/contest\/profile\/)?(\d+)/;
 
 interface NowCoderInitialState {
   prefetchData?: Record<
@@ -30,10 +31,22 @@ function decodeHtmlEntities(value: string) {
   return value
     .replace(/&quot;/g, '"')
     .replace(/&#34;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&#x2F;/g, '/');
+}
+
+function stripHtml(value: string) {
+  return decodeHtmlEntities(
+    value
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  );
 }
 
 function findJsonObjectEnd(source: string, start: number) {
@@ -96,6 +109,24 @@ function buildNowCoderUrl(userId: string, record: NowCoderTestRecord) {
   return `https://www.nowcoder.com/users/${encodeURIComponent(userId)}/tests`;
 }
 
+function extractTableCells(rowHtml: string) {
+  return [...rowHtml.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((match) => match[1]);
+}
+
+function normalizeNowCoderAcmTime(value: string) {
+  const normalized = value.trim().replace(/\//g, '-');
+  if (!normalized) return new Date().toISOString();
+
+  const parsed = new Date(`${normalized.replace(' ', 'T')}+08:00`);
+  if (Number.isNaN(parsed.getTime())) return new Date().toISOString();
+  return parsed.toISOString();
+}
+
+function toNumber(value: string) {
+  const number = Number.parseFloat(stripHtml(value));
+  return Number.isFinite(number) ? number : undefined;
+}
+
 export function normalizeNowCoderUserId(input: string) {
   const value = input.trim();
   const matched = value.match(NOWCODER_USER_ID_PATTERN);
@@ -132,4 +163,48 @@ export function parseNowCoderSubmissions(html: string, userId: string): OjSubmis
       } satisfies OjSubmission;
     })
     .sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt));
+}
+
+export function parseNowCoderAcmPracticeSubmissions(html: string, userId: string): OjSubmission[] {
+  const rows = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
+  const submissions = rows.flatMap((rowMatch) => {
+    const cells = extractTableCells(rowMatch[1]);
+    if (cells.length < 9 || !/\/acm\/problem\//i.test(cells[1] ?? '')) return [];
+
+    const submissionId = cells[0].match(/submissionId=(\d+)/i)?.[1] ?? stripHtml(cells[0]).match(/\d+/)?.[0];
+    const problemId = cells[1].match(/\/acm\/problem\/(\d+)/i)?.[1];
+    if (!submissionId || !problemId) return [];
+
+    const problemName = stripHtml(cells[1]) || `NowCoder ACM Problem ${problemId}`;
+    const verdict = stripHtml(cells[2]) || 'UNKNOWN';
+    const score = toNumber(cells[3]);
+    const language = stripHtml(cells[7]) || undefined;
+    const submittedAt = normalizeNowCoderAcmTime(stripHtml(cells[8]));
+    const accepted = verdict.includes('答案正确') || verdict.toUpperCase() === 'AC' || (score ?? 0) >= 100;
+
+    return [
+      {
+        id: `${NOWCODER_PLATFORM}-acm:${submissionId}`,
+        platform: NOWCODER_PLATFORM,
+        problemKey: `acm-${problemId}`,
+        problemName,
+        contestId: undefined,
+        verdict,
+        accepted,
+        tags: NOWCODER_ACM_TAGS,
+        rating: undefined,
+        language,
+        submittedAt,
+        sourceUrl: `https://ac.nowcoder.com/acm/contest/view-submission?submissionId=${encodeURIComponent(
+          submissionId,
+        )}&returnHomeType=1&uid=${encodeURIComponent(userId)}`,
+      } satisfies OjSubmission,
+    ];
+  });
+
+  if (submissions.length === 0) {
+    throw new Error('牛客 ACM 竞赛主页未返回公开练习记录，可能是账号 ID 错误或练习记录未公开');
+  }
+
+  return submissions.sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt));
 }

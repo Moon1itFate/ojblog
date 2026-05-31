@@ -59,7 +59,7 @@ OJ Tracker 的公网同步层采用 provider registry。新增一个刷题网站
 
 - Codeforces：前端直接调用公开 JSON API，支持提交和比赛历史。
 - AtCoder：前端调用 kenkoooo submissions API 和 AtCoder history JSON，支持提交和比赛历史。
-- 牛客：通过同源 API route `/api/tracker/nowcoder/[userId]/tests` 抓取公开个人刷题页，再解析 `window.__INITIAL_STATE__`。牛客页面没有开放跨域响应头，所以该平台需要服务端运行时。
+- 牛客：通过同源 API route `/api/tracker/nowcoder/[userId]/tests` 抓取公开个人刷题页，再解析 `window.__INITIAL_STATE__`。如果主站个人刷题页不可用，会继续尝试 `ac.nowcoder.com/acm/contest/profile/{id}/practice-coding`，解析 ACM 竞赛站公开练习表格。牛客页面没有开放跨域响应头，所以该平台需要服务端运行时。
 - 洛谷：通过同源 API route `/api/tracker/luogu/[userId]/practice` 读取公开练习记录，支持已通过题目、尝试题目和公开 rating 比赛记录。若用户开启练习记录隐私保护，洛谷会拒绝公开同步。
 
 ## 部署说明

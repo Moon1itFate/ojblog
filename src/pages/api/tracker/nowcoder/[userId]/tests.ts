@@ -7,7 +7,7 @@ export const prerender = false;
 export const GET: APIRoute = async ({ params }) => {
   const userId = normalizeNowCoderUserId(params.userId ?? '');
   if (!userId || !/^\d+$/.test(userId)) {
-    return Response.json({ error: '牛客 User ID 必须是个人主页中的数字 ID' }, { status: 400 });
+    return Response.json({ error: '牛客 User ID 必须是个人主页或 ACM 竞赛主页中的数字 ID' }, { status: 400 });
   }
 
   try {
