@@ -40,6 +40,10 @@ Current customizations:
 - `src/content/blog`: initial posts for algorithm notes, project logs, weekly review, and life notes.
 - `src/pages/tracker.md`: OJ Tracker planning page.
 
+## Comments
+
+Article comments are wired through Giscus and GitHub Discussions. See `docs/comment-setup.md` for the repository-side setup and the two IDs that must be copied into `config/site.yaml`.
+
 ## OJ Tracker Roadmap
 
 1. Start as a page and content category inside the blog.

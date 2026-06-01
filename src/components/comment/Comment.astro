@@ -13,20 +13,25 @@ import { christmasEnabled } from '@/store/christmas';
 const provider = commentConfig.provider ?? 'none';
 const locale = getLocaleFromUrl(Astro.url.pathname);
 let Provider = null;
+let isConfigured = false;
 
 if (provider === 'remark42') {
   Provider = (await import('./providers/Remark42.astro')).default;
+  isConfigured = Boolean(commentConfig.remark42?.host && commentConfig.remark42?.siteId);
 } else if (provider === 'giscus') {
   Provider = (await import('./providers/GiscusClient.astro')).default;
+  isConfigured = Boolean(commentConfig.giscus?.repo && commentConfig.giscus?.repoId && commentConfig.giscus?.categoryId);
 } else if (provider === 'waline') {
   Provider = (await import('./providers/WalineClient.astro')).default;
+  isConfigured = Boolean(commentConfig.waline?.serverURL);
 } else if (provider === 'twikoo') {
   Provider = (await import('./providers/TwikooClient.astro')).default;
+  isConfigured = Boolean(commentConfig.twikoo?.envId);
 }
 ---
 
 {
-  provider !== 'none' && Provider && (
+  provider !== 'none' && Provider && isConfigured && (
     <div class={cn('comments w-full', { 'z-5': christmasEnabled.get() })}>
       <p class="text-muted-foreground mb-4 text-center text-sm">{t(locale, 'comment.prompt')}</p>
       <Provider />

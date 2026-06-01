@@ -44,7 +44,7 @@ export default function Giscus() {
     return () => observer.disconnect();
   }, []);
 
-  if (!mounted || !config?.repo) return null;
+  if (!mounted || !config?.repo || !config.repoId || !config.categoryId) return null;
 
   const [owner, repo] = config.repo.split('/');
   if (!owner || !repo) {
