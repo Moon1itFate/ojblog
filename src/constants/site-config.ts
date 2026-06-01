@@ -286,6 +286,14 @@ export function createArticleStatsConfig(href: string): UmamiStatsConfig | null 
     : null;
 }
 
+/** Create public dashboard stats config. Returns null until Umami and share token are configured. */
+export const umamiDashboardStatsConfig: UmamiStatsConfig | null =
+  _umami?.enabled && _umami.statistics_display?.token && _umami.statistics_display?.dashboard
+    ? createUmamiStatsConfig(_umami)
+    : null;
+
+export const umamiDashboardDays = _umami?.statistics_display?.dashboard_days ?? 30;
+
 // Map YAML christmas config with defaults
 export const christmasConfig: ChristmasConfig = yamlConfig.christmas || {
   enabled: false,

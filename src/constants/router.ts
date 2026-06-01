@@ -30,6 +30,7 @@ export const RESERVED_ROUTES = new Set([
   'now',
   'projects',
   'changelog',
+  'stats',
   'tracker-guide',
   'post',
   'posts',

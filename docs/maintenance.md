@@ -13,6 +13,7 @@ corepack pnpm dev
 
 - 博客：`http://127.0.0.1:4321`
 - 刷题追踪：`http://127.0.0.1:4321/tracker`
+- 访问统计：`http://127.0.0.1:4321/stats`
 - 本地 CMS：`corepack pnpm cms`
 
 ## 写文章
@@ -34,6 +35,12 @@ corepack pnpm new:post -- --type project --title "文章标题"
 - 在 `config/site.yaml` 填入 `repoId` 和 `categoryId`。
 
 详细步骤见 `docs/comment-setup.md`。
+
+## 访问统计
+
+访问统计使用 Umami。启用后会自动记录全站访问和文章访问量，公开统计页是 `/stats`。
+
+配置说明见 `docs/analytics-setup.md`。
 
 ## 刷题追踪
 

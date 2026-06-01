@@ -30,6 +30,7 @@ description: "给第一次来到 Moonlit Fate 的读者准备的入口页。"
 - [刷题追踪面板](/tracker)
 - [刷题追踪说明](/tracker-guide)
 - [OJ Tracker 路线图](/post/project/moonlit-fate-roadmap)
+- [访问统计](/stats)
 
 ## 想互动
 

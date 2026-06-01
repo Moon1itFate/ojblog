@@ -447,6 +447,8 @@ export interface UmamiConfig {
     token: string;
     article_page_views: boolean;
     footer_site_stats: boolean;
+    dashboard?: boolean;
+    dashboard_days?: number;
   };
 }
 

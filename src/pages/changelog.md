@@ -13,6 +13,7 @@ description: "Moonlit Fate 和 OJ Tracker 的重要功能更新记录。"
 - 新增 [Start Here](/start) 入口页，让新读者能快速找到内容。
 - 新增 [Now](/now) 页面，记录当前写作、刷题和项目维护重点。
 - 新增 [Projects](/projects) 页面，整理站点和 OJ Tracker 的长期计划。
+- 新增 [访问统计](/stats) 页面，展示全站 PV、UV、访问趋势、热门文章、来源和设备分布。
 - 增强 [About](/about) 页面，补充读者入口、RSS 和评论说明。
 
 ### 评论与互动

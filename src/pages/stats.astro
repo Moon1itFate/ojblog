@@ -1,0 +1,85 @@
+---
+import AnalyticsDashboard from '@components/analytics/AnalyticsDashboard';
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { CONTENT_PADDING } from '@constants/layout';
+import { Routes } from '@constants/router';
+import { seoConfig, siteConfig, umamiDashboardDays, umamiDashboardStatsConfig } from '@constants/site-config';
+import { getPostLastCategory, getSortedPosts } from '@lib/content/posts';
+import { routeBuilder } from '@lib/route';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { Icon } from 'astro-icon/components';
+import { getLocaleFromUrl, localizedPath } from '@/i18n';
+
+const locale = getLocaleFromUrl(Astro.url.pathname);
+const posts = await getSortedPosts(locale);
+const postLinks = posts.map((post) => ({
+  title: post.data.title,
+  path: localizedPath(routeBuilder(Routes.Post, post), locale),
+  category: getPostLastCategory(post).name,
+}));
+---
+
+<Layout title={`访问统计 | ${seoConfig.title}`} description={`记录 ${siteConfig.title} 的全站访问量、访客数和文章阅读热度。`}>
+  <TwoColumnLayout>
+    <Cover slot="cover" title="访问统计" />
+    <HomeSider slot="sider" />
+    <div class={`shadow-box bg-gradient-start mx-0 flex w-full flex-col gap-8 ${CONTENT_PADDING.standard}`}>
+      {
+        umamiDashboardStatsConfig ? (
+          <AnalyticsDashboard client:load statsConfig={umamiDashboardStatsConfig} posts={postLinks} initialDays={umamiDashboardDays} />
+        ) : (
+          <div class="space-y-6">
+            <div class="rounded-lg border border-white/70 bg-white/75 p-6 shadow-sm backdrop-blur dark:border-white/10 dark:bg-zinc-900/60">
+              <div class="flex items-start gap-4">
+                <span class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon name="ri:bar-chart-grouped-line" class="size-6" />
+                </span>
+                <div>
+                  <p class="text-sm text-muted-foreground">Analytics is not configured</p>
+                  <h2 class="mt-1 text-2xl font-bold text-zinc-800 dark:text-zinc-100">统计后台尚未启用</h2>
+                  <p class="mt-3 text-sm leading-7 text-muted-foreground">
+                    这个页面已经准备好展示真实公网访问数据。启用 Umami 后，它会显示全站 PV、UV、访问次数、访问趋势、热门文章、来源和设备分布。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid gap-4 xl:grid-cols-2">
+              <section class="rounded-lg border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-zinc-900/60">
+                <h3 class="mb-3 flex items-center gap-2 text-lg font-bold text-zinc-800 dark:text-zinc-100">
+                  <Icon name="ri:settings-3-line" class="size-5 text-primary" />
+                  配置入口
+                </h3>
+                <pre class="overflow-x-auto rounded-lg bg-zinc-950 p-4 text-xs leading-6 text-zinc-100"><code>analytics:
+  umami:
+    enabled: true
+    id: your-umami-website-id
+    endpoint: https://stats.example.com
+    statistics_display:
+      token: your-umami-share-token
+      article_page_views: true
+      footer_site_stats: true
+      dashboard: true
+      dashboard_days: 30</code></pre>
+              </section>
+
+              <section class="rounded-lg border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-zinc-900/60">
+                <h3 class="mb-3 flex items-center gap-2 text-lg font-bold text-zinc-800 dark:text-zinc-100">
+                  <Icon name="ri:shield-check-line" class="size-5 text-primary" />
+                  数据边界
+                </h3>
+                <ul class="space-y-3 text-sm leading-7 text-muted-foreground">
+                  <li>只有部署后真实访问才会被记录，本地预览不会自动补历史数据。</li>
+                  <li>公开页面只读取 Umami 分享令牌，不暴露后台管理员账号。</li>
+                  <li>浏览器广告拦截、隐私模式和重复刷新都会影响统计口径。</li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </TwoColumnLayout>
+</Layout>

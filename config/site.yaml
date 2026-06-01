@@ -382,6 +382,9 @@ navigation:
   - name: 项目
     path: /projects
     icon: ri:planet-line
+  - name: 统计
+    path: /stats
+    icon: ri:bar-chart-grouped-line
   - name: 文章 # 有子菜单时，path 可省略
     nameKey: nav.posts
     icon: ri:quill-pen-ai-fill
@@ -567,6 +570,8 @@ comment:
 #   token: Umami 分享链接令牌（只读，可安全暴露到客户端）
 #   article_page_views: 在文章详情页显示访问量
 #   footer_site_stats: 在页脚 Site Stats 中显示全站访问量
+#   dashboard: 启用 /stats 访问统计可视化页面
+#   dashboard_days: 统计页面默认时间范围（天）
 # -----------------------------------------------------------------------------
 analytics:
   umami:
@@ -577,6 +582,8 @@ analytics:
     #   token: your-umami-share-token
     #   article_page_views: true
     #   footer_site_stats: true
+    #   dashboard: true
+    #   dashboard_days: 30
 
 # =============================================================================
 # SEO Configuration
