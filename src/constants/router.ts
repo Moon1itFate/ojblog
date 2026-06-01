@@ -25,6 +25,8 @@ export const RESERVED_ROUTES = new Set([
   'categories',
   'tags',
   'friends',
+  'now',
+  'projects',
   'post',
   'posts',
   'archives',
