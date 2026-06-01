@@ -44,6 +44,10 @@ Current customizations:
 
 Article comments are wired through Giscus and GitHub Discussions. See `docs/comment-setup.md` for the repository-side setup and the two IDs that must be copied into `config/site.yaml`.
 
+## Writing Workflow
+
+Posts are maintained in `src/content/blog` and published through the repository build. See `docs/writing-workflow.md` for the frontmatter template, category layout, and release checks.
+
 ## OJ Tracker Roadmap
 
 1. Start as a page and content category inside the blog.
