@@ -22,11 +22,15 @@ export enum Routes {
 export const RESERVED_ROUTES = new Set([
   // Static pages
   'about',
+  'start',
   'categories',
   'tags',
   'friends',
+  'guestbook',
   'now',
   'projects',
+  'changelog',
+  'tracker-guide',
   'post',
   'posts',
   'archives',

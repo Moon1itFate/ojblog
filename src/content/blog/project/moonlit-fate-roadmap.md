@@ -10,6 +10,15 @@ tags:
   - oj-tracker
 categories:
   - 项目日志
+audience:
+  - 想了解这个博客长期方向的读者
+  - 之后要维护 OJ Tracker 模块的自己
+prerequisites:
+  - 知道这是一个基于 Astro 的个人博客
+takeaways:
+  - 博客先站稳，OJ Tracker 再逐步抽离成可复用模块
+nextSteps:
+  - 继续补齐写作、互动、部署和数据同步文档
 sticky: true
 ---
 

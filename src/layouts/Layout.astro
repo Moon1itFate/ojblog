@@ -63,6 +63,7 @@ const isPostPage = stripLocaleFromPath(Astro.url.pathname).startsWith('/post/');
 
 // OGP image: use post cover if available, otherwise use default from config, fallback to avatar
 const ogImage = getOgImageUrl(post?.data.cover, Astro.site);
+const ogImageAlt = post?.data.title ? `${post.data.title} - ${siteConfig.title}` : `${siteConfig.title} social preview`;
 
 // Pre-compute i18n URLs for <head> links
 const rssHref = new URL(localizedPath('/rss.xml', locale), Astro.site).href;
@@ -129,6 +130,9 @@ const keywords = keywordsOverride || siteConfig.keywords || [siteConfig.title];
     />
     {/* astro-seo 暂不支持管理 keywords */}
     <meta name="keywords" content={keywords.join(', ')} />
+    <meta name="theme-color" content="#f7bfd1" />
+    {ogImage && <meta property="og:image:alt" content={ogImageAlt} />}
+    {ogImage && <meta name="twitter:image:alt" content={ogImageAlt} />}
 
     <link rel="alternate" type="application/rss+xml" title={siteConfig.title} href={rssHref} />
     {/* hreflang alternate links for SEO — only output when multiple locales are configured */}

@@ -1,4 +1,5 @@
 import { friendsIntro } from '@constants/friends-config';
+import { siteConfig } from '@constants/site-config';
 import { useTranslation } from '@hooks/useTranslation';
 import { useClipboard } from 'foxact/use-clipboard';
 import { useCallback, useState } from 'react';
@@ -35,10 +36,23 @@ image: ${formData.image || 'https://example.com/avatar.jpg'}
 color: "${formData.color || '#ffc0cb'}"`;
   }, [formData, t]);
 
+  const generateMySiteText = useCallback(() => {
+    return `site: ${siteConfig.title}
+url: ${siteConfig.site}
+owner: ${siteConfig.author ?? siteConfig.name}
+desc: ${siteConfig.description}
+image: ${siteConfig.avatar}
+color: "#f7bfd1"`;
+  }, []);
+
   const handleCopy = useCallback(() => {
     const yaml = generateText();
     copy(yaml);
   }, [copy, generateText]);
+
+  const handleCopyMySite = useCallback(() => {
+    copy(generateMySiteText());
+  }, [copy, generateMySiteText]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -199,6 +213,22 @@ color: "${formData.color || '#ffc0cb'}"`;
             <div className="relative flex-1 overflow-hidden rounded-xl border-2 border-gray-100 bg-white p-4 dark:border-gray-700 dark:bg-gray-950/50">
               <pre className="whitespace-pre-wrap font-mono text-gray-600 text-xs leading-relaxed dark:text-gray-300">
                 {generateText()}
+              </pre>
+            </div>
+
+            <div className="mt-4 rounded-xl border-2 border-pink-100 bg-white p-4 dark:border-pink-900/40 dark:bg-gray-950/50">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h4 className="font-bold text-gray-700 text-sm dark:text-gray-200">本站友链信息</h4>
+                <button
+                  type="button"
+                  onClick={handleCopyMySite}
+                  className="rounded-lg bg-pink-100 px-3 py-1.5 font-bold text-pink-700 text-xs transition hover:bg-pink-200 dark:bg-pink-900/40 dark:text-pink-200"
+                >
+                  {copied ? '已复制' : '复制本站信息'}
+                </button>
+              </div>
+              <pre className="whitespace-pre-wrap font-mono text-gray-600 text-xs leading-relaxed dark:text-gray-300">
+                {generateMySiteText()}
               </pre>
             </div>
 

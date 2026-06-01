@@ -9,6 +9,15 @@ tags:
   - writing
 categories:
   - 项目日志
+audience:
+  - 想知道这个博客如何发布文章的读者
+  - 之后要维护站点内容的自己
+prerequisites:
+  - 了解 Markdown 和 GitHub 仓库的基本概念
+takeaways:
+  - 正式文章由站主维护，读者互动放在评论区
+nextSteps:
+  - 使用 pnpm new:post 生成下一篇文章草稿
 ---
 
 这个站点的文章发布会保持一个简单原则：文章由我在仓库里维护，读者通过评论区交流。

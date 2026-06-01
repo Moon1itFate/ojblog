@@ -48,6 +48,15 @@ Article comments are wired through Giscus and GitHub Discussions. See `docs/comm
 
 Posts are maintained in `src/content/blog` and published through the repository build. See `docs/writing-workflow.md` for the frontmatter template, category layout, and release checks.
 
+Useful commands:
+
+```bash
+corepack pnpm new:post -- --type project --title "My new post"
+corepack pnpm new:post -- --type review --title "Weekly OJ review"
+```
+
+Maintenance notes live in `docs/maintenance.md`, and the weekly review structure lives in `docs/weekly-review-template.md`.
+
 ## OJ Tracker Roadmap
 
 1. Start as a page and content category inside the blog.

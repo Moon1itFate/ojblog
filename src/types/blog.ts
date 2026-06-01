@@ -17,6 +17,7 @@ export interface BlogSchema {
   categories?: string[] | string[][];
   sticky?: boolean;
   draft?: boolean;
+  comments?: boolean;
   tocNumbering?: boolean;
   /** Exclude this post from AI summary generation */
   excludeFromSummary?: boolean;
@@ -28,6 +29,10 @@ export interface BlogSchema {
   password?: string;
   /** Keywords for SEO */
   keywords?: string[];
+  audience?: string[];
+  prerequisites?: string[];
+  takeaways?: string[];
+  nextSteps?: string[];
 }
 
 /**

@@ -42,6 +42,7 @@ const blogCollection = defineCollection({
       .optional(),
     sticky: z.boolean().optional(),
     draft: z.boolean().optional(),
+    comments: z.boolean().optional(),
     // 目录编号控制
     tocNumbering: z.boolean().optional().default(true),
     // 排除 AI 摘要生成
@@ -52,6 +53,10 @@ const blogCollection = defineCollection({
     password: z.string().optional(),
     /** Keywords for SEO */
     keywords: z.array(z.string()).optional(),
+    audience: z.array(z.string()).optional(),
+    prerequisites: z.array(z.string()).optional(),
+    takeaways: z.array(z.string()).optional(),
+    nextSteps: z.array(z.string()).optional(),
   }) satisfies z.ZodType<BlogSchema, z.ZodTypeDef, BlogSchemaInput>,
 });
 

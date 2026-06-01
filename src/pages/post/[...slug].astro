@@ -1,6 +1,7 @@
 ---
 import CustomContent from '@components/common/CustomContent.astro';
 import HomeSider from '@components/layout/HomeSider.astro';
+import PostQualityPanel from '@components/post/PostQualityPanel.astro';
 import SummaryPanel, { type SummarySource } from '@components/post/SummaryPanel';
 import Cover from '@components/ui/cover/Cover.astro';
 import { defaultContentConfig } from '@constants/content-config';
@@ -51,6 +52,7 @@ const canonicalUrl = isFallback
   : undefined;
 const { Content } = await post.render();
 const { title, categories = [], tags = [], date, math: postMath, keywords: postKeywords = [] } = post?.data ?? {};
+const showComments = post.data.comments ?? true;
 // KaTeX CSS: only load when global enableMath is on AND post hasn't opted out.
 // When enableMath is false globally, rehype-katex is not in the pipeline, so no math is rendered.
 const hasMath = defaultContentConfig.enableMath !== false && postMath !== false;
@@ -203,10 +205,16 @@ if (post.data.description) {
           <SummaryPanel client:visible summary={summaryText} source={summarySource} className="mt-2" />
         )
       }
+      <PostQualityPanel
+        audience={post.data.audience}
+        prerequisites={post.data.prerequisites}
+        takeaways={post.data.takeaways}
+        nextSteps={post.data.nextSteps}
+      />
       <article class="prose md:prose-sm dark:prose-invert" data-pagefind-body>
         <CustomContent Content={Content} />
       </article>
-      <Comment />
+      {showComments && <Comment />}
     </div>
   </TwoColumnLayout>
 </Layout>

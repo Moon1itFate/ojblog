@@ -221,7 +221,7 @@ friends:
     title: 友情链接 # 页面标题
     subtitle: 欢迎交换友链！ # 页面副标题
     applyTitle: 申请友链 # 申请区块标题
-    applyDesc: 请在本页留言，格式如下 # 申请说明
+    applyDesc: 请填写信息后复制配置，并在本页评论区留言；下方也可以一键复制本站友链信息。 # 申请说明
     exampleYaml: | # 申请格式示例，会显示在页面上
       - site: 你的博客名称 # 站点名称
         url: https://your-blog.com/ # 站点网址
@@ -367,6 +367,9 @@ navigation:
     nameKey: nav.home # i18n 翻译 key
     path: / # 链接路径
     icon: ri:home-heart-fill # 图标
+  - name: 开始
+    path: /start
+    icon: ri:compass-3-line
   # - name: 书摘
   #   path: /reading
   - name: 周复盘
@@ -399,6 +402,9 @@ navigation:
     nameKey: nav.friends
     path: /friends
     icon: ri:links-line
+  - name: 留言板
+    path: /guestbook
+    icon: ri:message-3-line
   - name: 刷题追踪
     path: /tracker
     icon: ri:bar-chart-box-line

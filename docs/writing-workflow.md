@@ -17,6 +17,19 @@
 src/content/blog/algorithm/interval-dp-notes.md
 ```
 
+也可以使用脚本生成：
+
+```bash
+corepack pnpm new:post -- --type algorithm --title "区间 DP 复盘" --slug interval-dp-review
+```
+
+支持的类型：
+
+- `algorithm`: 算法题解
+- `project`: 项目日志
+- `review`: 周复盘
+- `life`: 随笔
+
 ## Frontmatter 模板
 
 ```yaml
@@ -31,6 +44,14 @@ tags:
   - dp
 categories:
   - 算法题解
+audience:
+  - 想复盘这类题型的读者
+prerequisites:
+  - 基础动态规划
+takeaways:
+  - 区间 DP 的核心是枚举断点和区间长度
+nextSteps:
+  - 找 2 道同类题做对照复盘
 ---
 ```
 
@@ -46,6 +67,20 @@ categories:
 - `sticky`: 是否置顶，可选。
 - `draft`: 草稿开关，生产构建会隐藏 `draft: true` 的文章。
 - `comments`: 单篇文章关闭评论时设为 `false`。
+- `audience`: 本文适合谁读，会显示在文章顶部的质量面板。
+- `prerequisites`: 前置知识。
+- `takeaways`: 复盘结论。
+- `nextSteps`: 读完后的下一步行动。
+
+## 周复盘
+
+周复盘可以用专门模板生成：
+
+```bash
+corepack pnpm new:post -- --type review --title "第 N 周刷题复盘"
+```
+
+详细结构见 `docs/weekly-review-template.md`。
 
 ## 发布前检查
 

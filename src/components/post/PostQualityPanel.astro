@@ -1,0 +1,47 @@
+---
+import { Icon } from 'astro-icon/components';
+
+type Item = {
+  title: string;
+  icon: string;
+  values?: string[];
+};
+
+interface Props {
+  audience?: string[];
+  prerequisites?: string[];
+  takeaways?: string[];
+  nextSteps?: string[];
+}
+
+const { audience, prerequisites, takeaways, nextSteps } = Astro.props;
+const items: Item[] = [
+  { title: '适合谁读', icon: 'ri:user-heart-line', values: audience },
+  { title: '前置知识', icon: 'ri:book-open-line', values: prerequisites },
+  { title: '复盘结论', icon: 'ri:sparkling-line', values: takeaways },
+  { title: '下一步', icon: 'ri:arrow-right-circle-line', values: nextSteps },
+].filter((item) => item.values?.length);
+---
+
+{
+  items.length > 0 && (
+    <section class="not-prose my-3 grid gap-3 sm:grid-cols-2">
+      {items.map((item) => (
+        <div class="rounded-lg border border-primary/10 bg-primary/5 px-4 py-3">
+          <div class="mb-2 flex items-center gap-2 font-medium text-foreground text-sm">
+            <Icon name={item.icon} class="size-4 text-primary" />
+            <span>{item.title}</span>
+          </div>
+          <ul class="m-0 space-y-1 p-0 text-muted-foreground text-sm">
+            {item.values?.map((value) => (
+              <li class="flex gap-2">
+                <span class="mt-2 size-1.5 shrink-0 rounded-full bg-primary/60" aria-hidden="true" />
+                <span>{value}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  )
+}
