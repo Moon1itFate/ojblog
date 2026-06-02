@@ -8,6 +8,8 @@ import { getAllTags, getCategoryList, getPostCount, getSortedPosts } from '@lib/
 import { getLqipStyle } from '@lib/lqip';
 import { cn, filterNavItems } from '@lib/utils';
 import { Icon } from 'astro-icon/components';
+import RecentReadingCard from '@components/reading/RecentReadingCard';
+import SavedPostsCard from '@components/reading/SavedPostsCard';
 import { getLocaleFromUrl, localizedPath, resolveNavName, stripLocaleFromPath, t } from '@/i18n';
 import type { BlogSchema } from '@/types/blog';
 import Social from './Social.astro';
@@ -72,6 +74,8 @@ const strippedPath = stripLocaleFromPath(Astro.url.pathname);
       {t(locale, 'homeInfo.tags')}
     </a>
   </div>
+  <RecentReadingCard client:idle />
+  <SavedPostsCard client:idle />
   <div class="mt-6 flex w-full flex-col items-center gap-2.5">
     {
       filteredRouters.map((item, index) => {

@@ -40,6 +40,15 @@ Current customizations:
 - `src/content/blog`: initial posts for algorithm notes, project logs, weekly review, and life notes.
 - `src/pages/tracker.md`: OJ Tracker planning page.
 
+## Reader Memory
+
+The blog includes a lightweight client-side reader memory:
+
+- article pages record local reading progress;
+- the sidebar shows recently read posts with progress bars;
+- article pages can be saved to a local "read later" list;
+- all reader memory stays in the visitor's browser `localStorage` and does not require a backend.
+
 ## Comments
 
 Article comments are wired through Giscus and GitHub Discussions. See `docs/comment-setup.md` for the repository-side setup and the two IDs that must be copied into `config/site.yaml`.

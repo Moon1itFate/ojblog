@@ -2,6 +2,8 @@
 import CustomContent from '@components/common/CustomContent.astro';
 import HomeSider from '@components/layout/HomeSider.astro';
 import PostQualityPanel from '@components/post/PostQualityPanel.astro';
+import ReadingProgressRecorder from '@components/reading/ReadingProgressRecorder';
+import SaveArticleButton from '@components/reading/SaveArticleButton';
 import SummaryPanel, { type SummarySource } from '@components/post/SummaryPanel';
 import Cover from '@components/ui/cover/Cover.astro';
 import { defaultContentConfig } from '@constants/content-config';
@@ -128,6 +130,8 @@ const breadcrumbJsonLd = {
   itemListElement: breadcrumbListItems,
 };
 
+const readingCategory = breadcrumbCategories[breadcrumbCategories.length - 1]?.name;
+
 // 确定显示的摘要内容和来源类型
 const postSlug = getPostSlug(post);
 let summaryText: string | null = null;
@@ -162,13 +166,21 @@ if (post.data.description) {
   <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd)} />
   {hasMath && <link slot="head" rel="stylesheet" href="/katex/katex.min.css" />}
+  <ReadingProgressRecorder
+    client:idle
+    href={Astro.url.pathname}
+    title={title}
+    description={finalDescription}
+    cover={post.data.cover}
+    category={readingCategory}
+  />
   <TwoColumnLayout post={post}>
     <Cover slot="cover" data={post} />
     <HomeSider slot="sider" type={HomeSiderType.POST} post={post} />
     <div class={`shadow-box bg-gradient-start flex flex-col gap-2 ${CONTENT_PADDING.standard}`}>
       <!-- Breadcrumb Navigation -->
-      <nav class="text-muted-foreground flex items-center justify-between gap-2 text-sm">
-        <div class="flex items-center gap-2">
+      <nav class="text-muted-foreground flex flex-wrap items-center justify-between gap-2 text-sm">
+        <div class="flex min-w-0 flex-wrap items-center gap-2">
           <div class="flex items-center gap-1">
             <!-- Home Icon and Link -->
             <Icon name="fa6-solid:house-chimney" class="h-4 w-4" />
@@ -192,7 +204,17 @@ if (post.data.description) {
             ))
           }
         </div>
-        {import.meta.env.DEV && <EditButton client:only="react" postId={postId} />}
+        <div class="flex shrink-0 items-center gap-2">
+          <SaveArticleButton
+            client:idle
+            href={Astro.url.pathname}
+            title={title}
+            description={finalDescription}
+            cover={post.data.cover}
+            category={readingCategory}
+          />
+          {import.meta.env.DEV && <EditButton client:only="react" postId={postId} />}
+        </div>
       </nav>
       {isFallback && (
         <div class="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
