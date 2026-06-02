@@ -49,6 +49,10 @@ The blog includes a lightweight client-side reader memory:
 - article pages can be saved to a local "read later" list;
 - all reader memory stays in the visitor's browser `localStorage` and does not require a backend.
 
+## Site App Metadata
+
+The public site ships with `/site.webmanifest` and `/icon.svg`, so browsers can identify the blog with a dedicated app icon, theme color, and quick shortcuts for articles, the OJ Tracker, and traffic stats.
+
 ## Comments
 
 Article comments are wired through Giscus and GitHub Discussions. See `docs/comment-setup.md` for the repository-side setup and the two IDs that must be copied into `config/site.yaml`.

@@ -1,0 +1,43 @@
+{
+  "name": "Moonlit Fate",
+  "short_name": "Moonlit",
+  "description": "A personal blog for writing, algorithm reviews, and OJ training notes.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff7fb",
+  "theme_color": "#f7bfd1",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Articles",
+      "short_name": "Articles",
+      "url": "/posts",
+      "description": "Browse the blog article list"
+    },
+    {
+      "name": "OJ Tracker",
+      "short_name": "Tracker",
+      "url": "/tracker",
+      "description": "Open the OJ training tracker"
+    },
+    {
+      "name": "Stats",
+      "short_name": "Stats",
+      "url": "/stats",
+      "description": "Open site traffic statistics"
+    }
+  ]
+}

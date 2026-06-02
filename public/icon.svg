@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Moonlit Fate">
+  <defs>
+    <linearGradient id="sky" x1="76" x2="436" y1="44" y2="468" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff7fb"/>
+      <stop offset=".45" stop-color="#ffd6e7"/>
+      <stop offset="1" stop-color="#b9d8ff"/>
+    </linearGradient>
+    <linearGradient id="crystal" x1="184" x2="334" y1="164" y2="402" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset=".45" stop-color="#ffa3c4"/>
+      <stop offset="1" stop-color="#7fb8ff"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+  <circle cx="168" cy="152" r="78" fill="#fff" opacity=".9"/>
+  <circle cx="198" cy="122" r="82" fill="#ffd6e7"/>
+  <path fill="#fff" opacity=".75" d="M392 96c10 28 30 48 58 58-28 10-48 30-58 58-10-28-30-48-58-58 28-10 48-30 58-58Z"/>
+  <path fill="#fff" opacity=".7" d="M116 314c7 19 21 33 40 40-19 7-33 21-40 40-7-19-21-33-40-40 19-7 33-21 40-40Z"/>
+  <g filter="url(#glow)">
+    <path fill="url(#crystal)" d="m256 132 96 116-96 220-96-220Z"/>
+    <path fill="#fff" opacity=".55" d="m256 132 36 116-36 220-36-220Z"/>
+    <path fill="#ffffff" opacity=".65" d="m160 248 96-116 96 116-96 44Z"/>
+    <path fill="#d95d89" opacity=".28" d="m160 248 96 44v176Z"/>
+    <path fill="#3c8fe8" opacity=".22" d="m352 248-96 44v176Z"/>
+  </g>
+</svg>
