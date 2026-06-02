@@ -57,7 +57,7 @@ corepack pnpm new:post -- --type review --title "Weekly OJ review"
 
 Maintenance notes live in `docs/maintenance.md`, and the weekly review structure lives in `docs/weekly-review-template.md`.
 
-Traffic analytics use Umami. Configure `analytics.umami` in `config/site.yaml`, then open `/stats` to view site PV/UV, article views, referrers, and device trends. Setup notes live in `docs/analytics-setup.md`.
+Traffic analytics use Umami. Configure `analytics.umami` in `config/site.yaml` to show ambient visitor badges in the nav, article view badges on covers/cards, footer totals, and the `/stats` dashboard. Setup notes live in `docs/analytics-setup.md`.
 
 ## OJ Tracker Roadmap
 

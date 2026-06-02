@@ -38,7 +38,7 @@ corepack pnpm new:post -- --type project --title "文章标题"
 
 ## 访问统计
 
-访问统计使用 Umami。启用后会自动记录全站访问和文章访问量，公开统计页是 `/stats`。
+访问统计使用 Umami。启用后会自动记录全站访问和文章访问量，并在导航栏、文章封面、文章列表卡片、页脚和 `/stats` 中显示。
 
 配置说明见 `docs/analytics-setup.md`。
 

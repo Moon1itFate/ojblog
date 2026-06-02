@@ -11,7 +11,7 @@ import { getLqipProps } from '@lib/lqip';
 import { routeBuilder } from '@lib/route';
 import { cn } from '@lib/utils';
 import { Icon } from 'astro-icon/components';
-import UmamiPVSpan from '@/components/umami/UmamiPVSpan';
+import PageViewBadge from '@/components/analytics/PageViewBadge';
 import { defaultLocale, getLocaleFromUrl, getLocaleLabel, localizedPath, t } from '@/i18n';
 import type { PostCardData } from '@/types/blog';
 
@@ -99,6 +99,13 @@ const pageStatsConfig = createArticleStatsConfig(href);
           alt="post cover"
           class="h-full w-full cursor-pointer object-cover transition duration-500 group-hover:scale-110 group-hover:rotate-3"
         />
+        {
+          pageStatsConfig && (
+            <span class="absolute bottom-3 right-3">
+              <PageViewBadge client:visible statsConfig={pageStatsConfig} variant="cover" />
+            </span>
+          )
+        }
       </a>
     )
   }
@@ -149,12 +156,8 @@ const pageStatsConfig = createArticleStatsConfig(href);
           {readingTime}
         </button>
 
-        {pageStatsConfig && (
-          <span class="flex-center gap-1 whitespace-nowrap">
-            <Icon name="ri:eye-line" class="h-4 w-4" />
-            <UmamiPVSpan client:visible statsConfig={pageStatsConfig} />
-            {t(locale, 'stats.pageviews')}
-          </span>
+        {pageStatsConfig && hideCover && (
+          <PageViewBadge client:visible statsConfig={pageStatsConfig} variant="glass" />
         )}
 
       </div>

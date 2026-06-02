@@ -7,7 +7,7 @@ import { getLqipStyle } from '@lib/lqip';
 import { routeBuilder } from '@lib/route';
 import { Icon } from 'astro-icon/components';
 import type { BlogPost } from 'types/blog';
-import UmamiPVSpan from '@/components/umami/UmamiPVSpan';
+import PageViewBadge from '@/components/analytics/PageViewBadge';
 import { MAX_WIDTH } from '@/constants/layout';
 import { getLocaleFromUrl, localizedPath, t } from '@/i18n';
 import WaveSvg from './wave';
@@ -96,11 +96,7 @@ const bannerImages = data?.data.cover ? [data.data.cover] : elysiaBannerImages;
                 {readState?.text}
               </span>
               {pageStatsConfig && (
-                <span class="flex items-center gap-1">
-                  <Icon name="ri:eye-line" class="h-4 w-4" />
-                  <UmamiPVSpan client:idle statsConfig={pageStatsConfig} />
-                  {t(locale, 'stats.pageviews')}
-                </span>
+                <PageViewBadge client:idle statsConfig={pageStatsConfig} variant="cover" />
               )}
             </p>
           )}

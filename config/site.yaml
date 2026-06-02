@@ -572,6 +572,8 @@ comment:
 #   footer_site_stats: 在页脚 Site Stats 中显示全站访问量
 #   dashboard: 启用 /stats 访问统计可视化页面
 #   dashboard_days: 统计页面默认时间范围（天）
+#   nav_site_stats: 在导航栏显示轻量访客数徽章
+#   visitor_effect: 新访客首次进入时显示轻量动效
 # -----------------------------------------------------------------------------
 analytics:
   umami:
@@ -584,6 +586,8 @@ analytics:
     #   footer_site_stats: true
     #   dashboard: true
     #   dashboard_days: 30
+    #   nav_site_stats: true
+    #   visitor_effect: true
 
 # =============================================================================
 # SEO Configuration

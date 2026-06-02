@@ -1,6 +1,6 @@
 # 访问统计配置
 
-站点访问统计使用 Umami。它负责在线记录真实访问，博客前端负责读取公开分享数据并渲染 `/stats` 可视化页面。
+站点访问统计使用 Umami。它负责在线记录真实访问，博客前端负责读取公开分享数据，并把统计结果嵌入到导航、文章卡片、文章封面、页脚和 `/stats` 可视化页面。
 
 Umami 文档入口：https://umami.is/docs
 
@@ -8,6 +8,8 @@ Umami 文档入口：https://umami.is/docs
 
 - 全站访问量 PV、独立访客 UV、访问次数和阅读时长。
 - 每篇文章的访问量，显示在文章封面、文章列表和 `/stats` 热门文章排行。
+- 导航栏旁边的来访人数小徽章。
+- 新访客首次进入站点时的轻量欢迎动效。
 - 最近 7、30、90 天访问趋势。
 - 访问来源和访问设备分布。
 
@@ -31,7 +33,17 @@ analytics:
       footer_site_stats: true
       dashboard: true
       dashboard_days: 30
+      nav_site_stats: true
+      visitor_effect: true
 ```
+
+## 开关说明
+
+- `article_page_views`：文章封面和文章列表卡片显示阅读量。
+- `footer_site_stats`：页脚显示全站访问量。
+- `dashboard`：启用 `/stats` 详细统计页。
+- `nav_site_stats`：导航栏显示来访人数徽章。
+- `visitor_effect`：新访客首次进入时显示欢迎动效。
 
 ## 注意事项
 

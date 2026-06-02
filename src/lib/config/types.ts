@@ -449,6 +449,8 @@ export interface UmamiConfig {
     footer_site_stats: boolean;
     dashboard?: boolean;
     dashboard_days?: number;
+    nav_site_stats?: boolean;
+    visitor_effect?: boolean;
   };
 }
 

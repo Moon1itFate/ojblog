@@ -294,6 +294,14 @@ export const umamiDashboardStatsConfig: UmamiStatsConfig | null =
 
 export const umamiDashboardDays = _umami?.statistics_display?.dashboard_days ?? 30;
 
+/** Small ambient visitor counter in the navigation/header. */
+export const umamiNavStatsConfig: UmamiStatsConfig | null =
+  _umami?.enabled && _umami.statistics_display?.token && _umami.statistics_display?.nav_site_stats
+    ? createUmamiStatsConfig(_umami)
+    : null;
+
+export const visitorEffectEnabled = _umami?.statistics_display?.visitor_effect ?? true;
+
 // Map YAML christmas config with defaults
 export const christmasConfig: ChristmasConfig = yamlConfig.christmas || {
   enabled: false,
