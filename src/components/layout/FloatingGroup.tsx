@@ -3,6 +3,7 @@
  *
  * Floating action buttons for navigation and utilities.
  * - Scroll to top/bottom
+ * - Quick access to posts, tracker, and guestbook
  * - Christmas effects toggle
  * - Expand/collapse toggle
  */
@@ -65,6 +66,10 @@ export default function FloatingGroup() {
 
   const scrollToBottom = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
 
+  const goTo = (path: string) => {
+    window.location.href = path;
+  };
+
   const toggleChristmas = () => {
     if (christmasEnabled.get()) {
       disableChristmasCompletely();
@@ -107,6 +112,15 @@ export default function FloatingGroup() {
                 <Icon icon={isBgmPanelOpen ? 'ri:music-2-fill' : 'ri:music-2-line'} className="h-5 w-5" />
               </FloatingButton>
             )}
+            <FloatingButton onClick={() => goTo('/posts')} ariaLabel={t('floating.posts')} title={t('floating.posts')}>
+              <Icon icon="ri:article-line" className="h-5 w-5" />
+            </FloatingButton>
+            <FloatingButton onClick={() => goTo('/tracker')} ariaLabel={t('floating.tracker')} title={t('floating.tracker')}>
+              <Icon icon="ri:bar-chart-box-line" className="h-5 w-5" />
+            </FloatingButton>
+            <FloatingButton onClick={() => goTo('/guestbook')} ariaLabel={t('floating.guestbook')} title={t('floating.guestbook')}>
+              <Icon icon="ri:message-3-line" className="h-5 w-5" />
+            </FloatingButton>
             <FloatingButton onClick={scrollToTop} ariaLabel={t('floating.backToTop')} title={t('floating.backToTop')}>
               <Icon icon="ri:arrow-up-s-line" className="h-5 w-5" />
             </FloatingButton>

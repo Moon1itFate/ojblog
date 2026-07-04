@@ -196,6 +196,9 @@ export const uiStrings: UIStrings = {
   'floating.toggleTheme': 'Toggle theme',
   'floating.christmas': 'Toggle Christmas effects',
   'floating.bgm': 'Background music',
+  'floating.posts': 'Posts',
+  'floating.tracker': 'OJ tracker',
+  'floating.guestbook': 'Guestbook',
   'floating.toggleToolbar': 'Toggle toolbar',
 
   // ── Announcement ────────────────────────────────────────────

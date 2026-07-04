@@ -195,6 +195,9 @@ export const uiStrings = {
   'floating.toggleTheme': '切换主题',
   'floating.christmas': '切换圣诞特效',
   'floating.bgm': '背景音乐',
+  'floating.posts': '文章入口',
+  'floating.tracker': '刷题追踪',
+  'floating.guestbook': '留言板',
   'floating.toggleToolbar': '展开/收起工具栏',
 
   // ── Announcement ────────────────────────────────────────────

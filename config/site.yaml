@@ -367,28 +367,13 @@ navigation:
     nameKey: nav.home # i18n 翻译 key
     path: / # 链接路径
     icon: ri:home-heart-fill # 图标
-  - name: 开始
-    path: /start
-    icon: ri:compass-3-line
-  # - name: 书摘
-  #   path: /reading
-  - name: 周复盘
-    nameKey: nav.weekly
-    path: /review
-    icon: ri:sparkling-2-line
-  - name: 现在
-    path: /now
-    icon: ri:time-line
-  - name: 项目
-    path: /projects
-    icon: ri:planet-line
-  - name: 统计
-    path: /stats
-    icon: ri:bar-chart-grouped-line
   - name: 文章 # 有子菜单时，path 可省略
     nameKey: nav.posts
     icon: ri:quill-pen-ai-fill
     children: # 子菜单列表
+      - name: 全部文章
+        path: /posts
+        icon: ri:article-line
       - name: 分类
         nameKey: nav.categories
         path: /categories
@@ -401,20 +386,51 @@ navigation:
         nameKey: nav.archives
         path: /archives
         icon: ri:archive-2-fill
-  - name: 友链
-    nameKey: nav.friends
-    path: /friends
-    icon: ri:links-line
-  - name: 留言板
-    path: /guestbook
-    icon: ri:message-3-line
-  - name: 刷题追踪
-    path: /tracker
-    icon: ri:bar-chart-box-line
-  - name: 关于
-    nameKey: nav.about
-    path: /about
-    icon: fa6-regular:circle-user
+  - name: 算法
+    icon: ri:brain-line
+    children:
+      - name: 刷题追踪
+        path: /tracker
+        icon: ri:bar-chart-box-line
+      - name: 同步指南
+        path: /tracker-guide
+        icon: ri:route-line
+      - name: 周复盘
+        nameKey: nav.weekly
+        path: /review
+        icon: ri:sparkling-2-line
+  - name: 空间
+    icon: ri:planet-line
+    children:
+      - name: 开始
+        path: /start
+        icon: ri:compass-3-line
+      - name: 现在
+        path: /now
+        icon: ri:time-line
+      - name: 项目
+        path: /projects
+        icon: ri:planet-line
+      - name: 统计
+        path: /stats
+        icon: ri:bar-chart-grouped-line
+      - name: 更新记录
+        path: /changelog
+        icon: ri:file-history-line
+      - name: 关于
+        nameKey: nav.about
+        path: /about
+        icon: fa6-regular:circle-user
+  - name: 互动
+    icon: ri:chat-heart-line
+    children:
+      - name: 友链
+        nameKey: nav.friends
+        path: /friends
+        icon: ri:links-line
+      - name: 留言板
+        path: /guestbook
+        icon: ri:message-3-line
 
 # =============================================================================
 # Christmas/Seasonal Features

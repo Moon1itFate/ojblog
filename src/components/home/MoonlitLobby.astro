@@ -1,0 +1,493 @@
+---
+import { buildCategoryPath, buildTagPath, getAllTags, getCategoryList, getPostCount, getSortedPosts } from '@lib/content';
+import { getPostSlug } from '@lib/content/locale';
+import { getPostLastCategory, getPostReadingTime } from '@lib/content/posts';
+import { routeBuilder } from '@lib/route';
+import { formatCompactNumber } from '@lib/utils';
+import { Icon } from 'astro-icon/components';
+import { getLocaleFromUrl, localizedPath } from '@/i18n';
+import { Routes } from '@constants/router';
+
+const locale = getLocaleFromUrl(Astro.url.pathname);
+const posts = await getSortedPosts(locale);
+const postCount = await getPostCount(locale);
+const { countMap } = await getCategoryList(locale);
+const tags = getAllTags(posts);
+
+const totalWords = posts.reduce((sum, post) => sum + getPostReadingTime(post).words, 0);
+const latestPost = posts[0];
+const popularTags = Object.entries(tags)
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 8);
+
+const getPostHref = (post: (typeof posts)[number]) =>
+  localizedPath(routeBuilder(Routes.Post, { slug: getPostSlug(post), link: post.data.link, title: post.data.title }), locale);
+
+const portalGroups = [
+  {
+    title: '文章宇宙',
+    icon: 'ri:quill-pen-ai-line',
+    tone: 'rose',
+    description: '题解、项目日志和生活碎片都在这里归档。',
+    links: [
+      { label: '全部文章', href: '/posts', icon: 'ri:article-line' },
+      { label: '分类', href: '/categories', icon: 'ri:grid-fill' },
+      { label: '标签', href: '/tags', icon: 'fa6-solid:tags' },
+      { label: '归档', href: '/archives', icon: 'ri:archive-2-fill' },
+    ],
+  },
+  {
+    title: '算法训练',
+    icon: 'ri:brain-line',
+    tone: 'cyan',
+    description: '把 OJ 记录、薄弱题型和周复盘连成训练闭环。',
+    links: [
+      { label: '刷题追踪', href: '/tracker', icon: 'ri:bar-chart-box-line' },
+      { label: '同步指南', href: '/tracker-guide', icon: 'ri:route-line' },
+      { label: '周复盘', href: '/review', icon: 'ri:sparkling-2-line' },
+    ],
+  },
+  {
+    title: '站点互动',
+    icon: 'ri:chat-heart-line',
+    tone: 'violet',
+    description: '留言、友链和访问可视化让博客更像一个有人气的小站。',
+    links: [
+      { label: '留言板', href: '/guestbook', icon: 'ri:message-3-line' },
+      { label: '友链', href: '/friends', icon: 'ri:links-line' },
+      { label: '访问统计', href: '/stats', icon: 'ri:bar-chart-grouped-line' },
+    ],
+  },
+  {
+    title: '个人空间',
+    icon: 'ri:planet-line',
+    tone: 'amber',
+    description: '记录现在的状态、项目路线和这个博客的搭建方式。',
+    links: [
+      { label: '现在', href: '/now', icon: 'ri:time-line' },
+      { label: '项目', href: '/projects', icon: 'ri:planet-line' },
+      { label: '开始', href: '/start', icon: 'ri:compass-3-line' },
+      { label: '更新', href: '/changelog', icon: 'ri:file-history-line' },
+      { label: '关于', href: '/about', icon: 'fa6-regular:circle-user' },
+    ],
+  },
+];
+
+const randomPool = posts.slice(0, 12).map((post) => {
+  const href = getPostHref(post);
+  const category = getPostLastCategory(post).name;
+  return {
+    title: post.data.title,
+    href,
+    category,
+  };
+});
+
+const signals = [
+  { label: '文章', value: formatCompactNumber(postCount), icon: 'ri:file-list-3-line' },
+  { label: '分类', value: formatCompactNumber(Object.keys(countMap).length), icon: 'ri:folder-chart-line' },
+  { label: '标签', value: formatCompactNumber(Object.keys(tags).length), icon: 'ri:price-tag-3-line' },
+  { label: '字数', value: formatCompactNumber(totalWords), icon: 'ri:quill-pen-line' },
+];
+---
+
+<section class="moonlit-lobby" aria-labelledby="moonlit-lobby-title">
+  <div class="lobby-head">
+    <div>
+      <p class="lobby-kicker">Moonlit portal</p>
+      <h2 id="moonlit-lobby-title">站点大厅</h2>
+    </div>
+    {latestPost && (
+      <a
+        class="latest-chip"
+        href={getPostHref(latestPost)}
+      >
+        <Icon name="ri:flashlight-line" />
+        <span>最新：{latestPost.data.title}</span>
+      </a>
+    )}
+  </div>
+
+  <div class="signal-row" aria-label="站点概览">
+    {signals.map((item) => (
+      <a class="signal-item" href={item.label === '文章' ? localizedPath('/posts', locale) : item.label === '分类' ? localizedPath('/categories', locale) : item.label === '标签' ? localizedPath('/tags', locale) : localizedPath('/archives', locale)}>
+        <Icon name={item.icon} />
+        <span>{item.label}</span>
+        <strong>{item.value}</strong>
+      </a>
+    ))}
+  </div>
+
+  <div class="portal-grid">
+    {portalGroups.map((group) => (
+      <article class={`portal-card portal-card-${group.tone}`}>
+        <div class="portal-title">
+          <Icon name={group.icon} />
+          <h3>{group.title}</h3>
+        </div>
+        <p>{group.description}</p>
+        <div class="portal-links">
+          {group.links.map((link) => (
+            <a href={localizedPath(link.href, locale)}>
+              <Icon name={link.icon} />
+              <span>{link.label}</span>
+            </a>
+          ))}
+        </div>
+      </article>
+    ))}
+  </div>
+
+  <div class="explore-strip">
+    <div class="random-panel">
+      <div>
+        <p class="lobby-kicker">Lucky read</p>
+        <h3>随机抽一篇</h3>
+      </div>
+      <button type="button" class="random-button" data-random-post-trigger>
+        <Icon name="ri:dice-5-line" />
+        <span>抽签</span>
+      </button>
+      <p class="random-result" data-random-post-result>
+        {randomPool[0] ? `${randomPool[0].category ?? 'Moonlit'} / ${randomPool[0].title}` : '还没有可抽取的文章'}
+      </p>
+      <div hidden data-random-posts={JSON.stringify(randomPool)}></div>
+    </div>
+
+    <div class="tag-river" aria-label="热门标签">
+      {popularTags.map(([tag, count], index) => (
+        <a href={localizedPath(buildTagPath(tag), locale)} style={`--delay: ${index * 0.08}s`}>
+          <span>#{tag}</span>
+          <small>{count}</small>
+        </a>
+      ))}
+      {Object.keys(countMap).slice(0, 4).map((category, index) => (
+        <a href={localizedPath(buildCategoryPath([category]), locale)} style={`--delay: ${(index + popularTags.length) * 0.08}s`}>
+          <span>{category}</span>
+          <small>分类</small>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  function initMoonlitLobby() {
+    document.querySelectorAll<HTMLElement>('[data-random-posts]').forEach((store) => {
+      const panel = store.closest('.random-panel');
+      const trigger = panel?.querySelector<HTMLButtonElement>('[data-random-post-trigger]');
+      const result = panel?.querySelector<HTMLElement>('[data-random-post-result]');
+      if (!panel || !trigger || !result || trigger.dataset.initialized === 'true') return;
+
+      trigger.dataset.initialized = 'true';
+      const posts = JSON.parse(store.dataset.randomPosts || '[]') as { title: string; href: string; category?: string }[];
+
+      trigger.addEventListener('click', () => {
+        if (!posts.length) return;
+        const post = posts[Math.floor(Math.random() * posts.length)];
+        result.textContent = `${post.category || 'Moonlit'} / ${post.title}`;
+        result.dataset.active = 'true';
+        window.setTimeout(() => {
+          window.location.href = post.href;
+        }, 480);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMoonlitLobby);
+  } else {
+    initMoonlitLobby();
+  }
+
+  document.addEventListener('astro:page-load', initMoonlitLobby);
+</script>
+
+<style>
+  .moonlit-lobby {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow: hidden;
+  }
+
+  .moonlit-lobby::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    content: '';
+    background:
+      linear-gradient(110deg, hsl(var(--primary) / 0.08), transparent 42%),
+      radial-gradient(circle at 92% 10%, hsl(var(--primary) / 0.1), transparent 28%);
+  }
+
+  .moonlit-lobby > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .lobby-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .lobby-kicker {
+    margin: 0;
+    color: hsl(var(--primary));
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .lobby-head h2,
+  .random-panel h3 {
+    margin: 0.1rem 0 0;
+    color: hsl(var(--foreground));
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+
+  .latest-chip,
+  .signal-item,
+  .portal-links a,
+  .random-button,
+  .tag-river a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 0.5rem;
+    background: hsl(var(--background) / 0.55);
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease,
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .latest-chip {
+    max-width: 22rem;
+    padding: 0.45rem 0.7rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8rem;
+  }
+
+  .latest-chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .latest-chip:hover,
+  .signal-item:hover,
+  .portal-links a:hover,
+  .random-button:hover,
+  .tag-river a:hover {
+    transform: translateY(-1px);
+    border-color: hsl(var(--primary) / 0.36);
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+  }
+
+  .signal-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .signal-item {
+    justify-content: space-between;
+    padding: 0.6rem 0.75rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8rem;
+  }
+
+  .signal-item strong {
+    color: hsl(var(--foreground));
+    font-size: 1rem;
+  }
+
+  .portal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+
+  .portal-card {
+    display: flex;
+    min-height: 10.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, hsl(var(--background) / 0.68), hsl(var(--muted) / 0.2));
+  }
+
+  .portal-card-rose {
+    --portal-accent: 338 78% 68%;
+  }
+
+  .portal-card-cyan {
+    --portal-accent: 190 72% 58%;
+  }
+
+  .portal-card-violet {
+    --portal-accent: 270 72% 70%;
+  }
+
+  .portal-card-amber {
+    --portal-accent: 42 86% 62%;
+  }
+
+  .portal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: hsl(var(--portal-accent));
+  }
+
+  .portal-title h3 {
+    margin: 0;
+    color: hsl(var(--foreground));
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .portal-card p {
+    margin: 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+
+  .portal-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto;
+  }
+
+  .portal-links a {
+    padding: 0.4rem 0.55rem;
+    color: hsl(var(--foreground) / 0.78);
+    font-size: 0.8rem;
+  }
+
+  .portal-links a:hover {
+    border-color: hsl(var(--portal-accent) / 0.42);
+    background: hsl(var(--portal-accent) / 0.11);
+    color: hsl(var(--portal-accent));
+  }
+
+  .explore-strip {
+    display: grid;
+    grid-template-columns: minmax(15rem, 0.85fr) minmax(0, 1.15fr);
+    gap: 0.9rem;
+  }
+
+  .random-panel,
+  .tag-river {
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 0.5rem;
+    background: hsl(var(--background) / 0.42);
+    padding: 1rem;
+  }
+
+  .random-panel {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.65rem 0.8rem;
+  }
+
+  .random-button {
+    align-self: start;
+    cursor: pointer;
+    padding: 0.52rem 0.72rem;
+    color: hsl(var(--foreground));
+    font-size: 0.85rem;
+  }
+
+  .random-result {
+    grid-column: 1 / -1;
+    margin: 0;
+    min-height: 2.6rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .random-result[data-active='true'] {
+    color: hsl(var(--primary));
+  }
+
+  .tag-river {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    gap: 0.55rem;
+  }
+
+  .tag-river a {
+    animation: tag-rise 0.36s ease both;
+    animation-delay: var(--delay);
+    padding: 0.38rem 0.55rem;
+    color: hsl(var(--foreground) / 0.76);
+    font-size: 0.8rem;
+  }
+
+  .tag-river small {
+    color: hsl(var(--muted-foreground));
+  }
+
+  @keyframes tag-rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .lobby-head,
+    .explore-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .lobby-head {
+      display: grid;
+      align-items: start;
+    }
+
+    .latest-chip {
+      max-width: 100%;
+    }
+
+    .portal-grid,
+    .signal-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tag-river a {
+      animation: none;
+    }
+
+    .latest-chip,
+    .signal-item,
+    .portal-links a,
+    .random-button,
+    .tag-river a {
+      transition: none;
+    }
+  }
+</style>

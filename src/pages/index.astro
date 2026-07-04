@@ -10,6 +10,7 @@ import { getHomePagePosts } from '@lib/content';
 import { toPostCardDataList } from '@lib/content/transforms';
 import type { Page } from 'astro';
 import type { BlogPost } from 'types/blog';
+import MoonlitLobby from '@/components/home/MoonlitLobby.astro';
 import CategoryCards from '@/components/post/CategoryCards.astro';
 import Divider from '@/components/ui/divider';
 import { getLocaleFromUrl, localizedPath, t } from '@/i18n';
@@ -62,6 +63,8 @@ const page: Page<BlogPost> = {
           <PostList posts={stickyPosts} showPaginator={false} />
         </>
       )}
+      <Divider>站点大厅</Divider>
+      <MoonlitLobby />
       <Divider>{t(locale, 'post.postList')}</Divider>
       <PostList posts={posts} page={page} showPaginator={true} baseUrl={postsBaseUrl} isHomePage={true} />
       {!!siteConfig?.featuredCategories?.length && (

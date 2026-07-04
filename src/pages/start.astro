@@ -1,0 +1,313 @@
+---
+import HomeSider from '@components/layout/HomeSider.astro';
+import Cover from '@components/ui/cover/Cover.astro';
+import { CONTENT_PADDING } from '@constants/layout';
+import { seoConfig } from '@constants/site-config';
+import Layout from '@layouts/Layout.astro';
+import TwoColumnLayout from '@layouts/TwoColumnLayout.astro';
+import { Icon } from 'astro-icon/components';
+
+const routeGroups = [
+  {
+    title: '第一次来',
+    subtitle: '快速了解这里是什么',
+    icon: 'ri:compass-3-line',
+    links: [
+      { label: '关于博客', href: '/about', icon: 'fa6-regular:circle-user' },
+      { label: '现在状态', href: '/now', icon: 'ri:time-line' },
+      { label: '项目计划', href: '/projects', icon: 'ri:planet-line' },
+    ],
+  },
+  {
+    title: '阅读路线',
+    subtitle: '从内容地图进入文章',
+    icon: 'ri:quill-pen-ai-line',
+    links: [
+      { label: '全部文章', href: '/posts', icon: 'ri:article-line' },
+      { label: '分类目录', href: '/categories', icon: 'ri:grid-fill' },
+      { label: '标签索引', href: '/tags', icon: 'fa6-solid:tags' },
+      { label: '归档时间线', href: '/archives', icon: 'ri:archive-2-fill' },
+    ],
+  },
+  {
+    title: '算法训练',
+    subtitle: '把刷题记录变成复盘材料',
+    icon: 'ri:brain-line',
+    links: [
+      { label: '刷题追踪', href: '/tracker', icon: 'ri:bar-chart-box-line' },
+      { label: '同步指南', href: '/tracker-guide', icon: 'ri:route-line' },
+      { label: '周复盘', href: '/review', icon: 'ri:sparkling-2-line' },
+    ],
+  },
+  {
+    title: '互动入口',
+    subtitle: '留言、友链和订阅',
+    icon: 'ri:chat-heart-line',
+    links: [
+      { label: '留言板', href: '/guestbook', icon: 'ri:message-3-line' },
+      { label: '友情链接', href: '/friends', icon: 'ri:links-line' },
+      { label: 'RSS', href: '/rss.xml', icon: 'ri:rss-line' },
+    ],
+  },
+];
+
+const statusItems = [
+  { label: '博客本体', value: '持续维护', icon: 'ri:home-heart-line' },
+  { label: 'OJ Tracker', value: '联网同步', icon: 'ri:cloud-line' },
+  { label: '评论系统', value: 'GitHub 讨论', icon: 'ri:github-line' },
+  { label: '访问统计', value: '部署后启用', icon: 'ri:line-chart-line' },
+];
+
+const roadmap = [
+  '先把这里当成个人博客阅读：文章、分类、标签、归档已经组成完整内容地图。',
+  '再进入 OJ Tracker：同步 Codeforces、AtCoder、牛客、洛谷等平台记录。',
+  '最后通过周复盘把刷题数据转成错因、薄弱题型和下一步训练计划。',
+];
+---
+
+<Layout title={`从这里开始 | ${seoConfig.title}`} description="Moonlit Fate 的入站导航页，汇总阅读、刷题追踪、互动和站点维护入口。">
+  <TwoColumnLayout>
+    <Cover slot="cover" title="从这里开始" />
+    <HomeSider slot="sider" />
+    <main class={`start-page shadow-box bg-gradient-start ${CONTENT_PADDING.standard}`} data-pagefind-body>
+      <section class="start-hero">
+        <p class="start-kicker">Start here</p>
+        <h1>把这座小站当成一张地图</h1>
+        <p>
+          Moonlit Fate 现在不只是刷题追踪面板，而是一个用于记录题解、复盘、项目和生活片段的个人博客。
+          你可以按下面四条路线进入，也可以直接从首页的站点大厅随机抽一篇文章。
+        </p>
+      </section>
+
+      <section class="status-grid" aria-label="站点状态">
+        {statusItems.map((item) => (
+          <div class="status-item">
+            <Icon name={item.icon} />
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+          </div>
+        ))}
+      </section>
+
+      <section class="route-grid" aria-label="入口路线">
+        {routeGroups.map((group) => (
+          <article class="route-card">
+            <div class="route-head">
+              <Icon name={group.icon} />
+              <div>
+                <h2>{group.title}</h2>
+                <p>{group.subtitle}</p>
+              </div>
+            </div>
+            <div class="route-links">
+              {group.links.map((link) => (
+                <a href={link.href}>
+                  <Icon name={link.icon} />
+                  <span>{link.label}</span>
+                </a>
+              ))}
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section class="roadmap-panel">
+        <div>
+          <p class="start-kicker">Reading flow</p>
+          <h2>推荐浏览顺序</h2>
+        </div>
+        <ol>
+          {roadmap.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ol>
+      </section>
+    </main>
+  </TwoColumnLayout>
+</Layout>
+
+<style>
+  .start-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    overflow: hidden;
+  }
+
+  .start-hero,
+  .roadmap-panel {
+    position: relative;
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    background:
+      linear-gradient(120deg, hsl(var(--primary) / 0.1), transparent 48%),
+      hsl(var(--background) / 0.4);
+  }
+
+  .start-kicker {
+    margin: 0;
+    color: hsl(var(--primary));
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .start-hero h1,
+  .roadmap-panel h2 {
+    margin: 0.2rem 0 0;
+    color: hsl(var(--foreground));
+    font-size: 1.45rem;
+    font-weight: 900;
+  }
+
+  .start-hero p {
+    margin: 0.8rem 0 0;
+    max-width: 48rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.8;
+  }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .status-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.2rem 0.55rem;
+    align-items: center;
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    background: hsl(var(--background) / 0.45);
+  }
+
+  .status-item svg {
+    grid-row: span 2;
+    color: hsl(var(--primary));
+  }
+
+  .status-item span {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.78rem;
+  }
+
+  .status-item strong {
+    color: hsl(var(--foreground));
+    font-size: 0.92rem;
+  }
+
+  .route-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+
+  .route-card {
+    display: flex;
+    min-height: 11rem;
+    flex-direction: column;
+    gap: 1rem;
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background: hsl(var(--background) / 0.42);
+  }
+
+  .route-head {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .route-head > svg {
+    margin-top: 0.15rem;
+    color: hsl(var(--primary));
+    font-size: 1.25rem;
+  }
+
+  .route-head h2 {
+    margin: 0;
+    color: hsl(var(--foreground));
+    font-size: 1.05rem;
+    font-weight: 850;
+  }
+
+  .route-head p {
+    margin: 0.25rem 0 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.85rem;
+  }
+
+  .route-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto;
+  }
+
+  .route-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid hsl(var(--foreground) / 0.08);
+    border-radius: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    color: hsl(var(--foreground) / 0.78);
+    background: hsl(var(--background) / 0.46);
+    font-size: 0.82rem;
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .route-links a:hover {
+    transform: translateY(-1px);
+    border-color: hsl(var(--primary) / 0.35);
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.1);
+  }
+
+  .roadmap-panel {
+    display: grid;
+    grid-template-columns: minmax(10rem, 0.35fr) 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .roadmap-panel ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: hsl(var(--muted-foreground));
+    line-height: 1.8;
+  }
+
+  .roadmap-panel li + li {
+    margin-top: 0.4rem;
+  }
+
+  @media (max-width: 900px) {
+    .status-grid,
+    .route-grid,
+    .roadmap-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .start-hero,
+    .roadmap-panel,
+    .route-card {
+      padding: 1rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .route-links a {
+      transition: none;
+    }
+  }
+</style>

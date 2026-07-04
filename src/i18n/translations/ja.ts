@@ -196,6 +196,9 @@ export const uiStrings: UIStrings = {
   'floating.toggleTheme': 'テーマを切り替え',
   'floating.christmas': 'クリスマスエフェクトに切り替え',
   'floating.bgm': 'BGM',
+  'floating.posts': '投稿',
+  'floating.tracker': 'OJトラッカー',
+  'floating.guestbook': 'ゲストブック',
   'floating.toggleToolbar': 'ツールバーを切り替え',
 
   // ── お知らせ ────────────────────────────────────────────

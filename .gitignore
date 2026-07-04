@@ -21,6 +21,7 @@ pnpm-debug.log*
 
 # vercel
 .vercel
+.netlify
 .superset
 
 # macOS-specific files
@@ -39,3 +40,11 @@ pnpm-debug.log*
 
 # Backup files
 backups/
+
+# Local-only character/model material inbox. These files may have separate licenses
+# and must not be published with the open-source site by accident.
+model-inbox/
+
+# Codex local work artifacts
+.codex-dev-server.log
+.codex-docx-extract/

@@ -18,6 +18,11 @@ const DropdownNavComponent = ({ item, currentPath, className, locale = defaultLo
   const name = resolveNavName(item.nameKey, item.name, locale);
 
   const strippedPath = stripLocaleFromPath(currentPath);
+  const isChildActive = children?.some((child) => {
+    if (!child.path) return false;
+    if (child.path === '/') return strippedPath === '/';
+    return strippedPath === child.path || strippedPath.startsWith(`${child.path}/`);
+  });
 
   const renderDropdownContent = useCallback(
     () => (
@@ -60,6 +65,8 @@ const DropdownNavComponent = ({ item, currentPath, className, locale = defaultLo
           'inline-flex h-10 items-center px-4 py-2 text-base tracking-wider',
           'relative after:absolute after:bottom-1 after:left-1/2 after:h-0.5 after:w-0',
           'after:-translate-x-1/2 after:bg-white after:transition-all after:duration-300 after:content-[""]',
+          'hover:after:w-9/12',
+          isChildActive && 'after:w-9/12',
           className,
         )}
         aria-expanded={isOpen}

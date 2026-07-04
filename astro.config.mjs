@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import netlify from '@astrojs/netlify';
 import node from '@astrojs/node';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
+import vercel from '@astrojs/vercel';
 import yaml from '@rollup/plugin-yaml';
 import tailwindcss from '@tailwindcss/vite';
 import umami from '@yeskunall/astro-umami';
@@ -47,6 +49,34 @@ const yamlConfig = loadConfigForAstro();
 // Use loadEnv to read .env file (astro.config.mjs runs before Vite loads .env)
 const { ANALYZE } = loadEnv(process.env.NODE_ENV || 'production', process.cwd(), '');
 const isAnalyze = ANALYZE === 'true';
+
+function getSiteUrl() {
+  const explicitUrl = process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.URL;
+  if (explicitUrl) return normalizeUrl(explicitUrl);
+
+  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (vercelUrl) return normalizeUrl(`https://${vercelUrl}`);
+
+  return normalizeUrl(yamlConfig.site.url);
+}
+
+function getDeploymentAdapter() {
+  const target = process.env.ASTRO_DEPLOY_TARGET?.toLowerCase();
+
+  if (target === 'vercel' || process.env.VERCEL) {
+    return vercel({
+      maxDuration: 30,
+    });
+  }
+
+  if (target === 'netlify' || process.env.NETLIFY) {
+    return netlify();
+  }
+
+  return node({
+    mode: 'standalone',
+  });
+}
 // Get Umami analytics config from YAML
 const umamiConfig = yamlConfig.analytics?.umami;
 const umamiEnabled = umamiConfig?.enabled ?? false;
@@ -172,10 +202,8 @@ if (contentConfig.enableCodeMeta !== false) shikiTransformers.push(shokaMetaTran
 
 // https://astro.build/config
 export default defineConfig({
-  site: yamlConfig.site.url,
-  adapter: node({
-    mode: 'standalone',
-  }),
+  site: getSiteUrl(),
+  adapter: getDeploymentAdapter(),
   compressHTML: true,
   markdown: {
     // Enable GitHub Flavored Markdown
