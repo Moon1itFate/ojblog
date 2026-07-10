@@ -2,7 +2,7 @@
 title: "真我花园开张记录"
 description: "一个关于新博客风格、内容边界和长期维护的小随笔。"
 date: 2026-05-28 20:00:00
-cover: /img/docx-covers/docx-cover-03.png
+cover: /img/docx-covers/docx-cover-05.jpeg
 tags:
   - life
   - blog

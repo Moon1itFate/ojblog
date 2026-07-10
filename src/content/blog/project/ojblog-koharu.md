@@ -2,7 +2,7 @@
 title: "ojblog 项目日志：迁移到 Astro Koharu"
 description: "将原型替换为 astro-koharu 模板，并确认 AGPL-3.0 开源方向。"
 date: 2026-05-30 16:15:00
-cover: /img/docx-covers/docx-cover-06.jpeg
+cover: /img/elysia/cover-15.webp
 tags:
   - astro
   - koharu

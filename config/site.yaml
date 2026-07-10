@@ -91,15 +91,15 @@ categoryMap:
 featuredCategories:
   - link: life # 对应 categoryMap 中 随笔: life
     label: 随笔
-    image: /img/elysia/cover-03.webp
+    image: /img/docx-covers/docx-cover-01.jpeg
     description: 灵感碎片、生活记录与站点随想
   - link: algorithm
     label: 算法题解
-    image: /img/elysia/cover-06.webp
+    image: /img/docx-covers/docx-cover-02.png
     description: 题解、错题复盘与训练方法
   - link: project
     label: 项目日志
-    image: /img/elysia/cover-01.webp
+    image: /img/docx-covers/docx-cover-06.jpeg
     description: ojblog 的设计、开发与重构记录
   - link: review
     label: 周复盘
@@ -302,12 +302,9 @@ defaultCoverList:
   - /img/elysia/cover-13.webp
   - /img/elysia/cover-14.webp
   - /img/elysia/cover-15.webp
-  - /img/docx-covers/docx-cover-01.jpeg
-  - /img/docx-covers/docx-cover-02.png
   - /img/docx-covers/docx-cover-03.png
   - /img/docx-covers/docx-cover-04.jpeg
   - /img/docx-covers/docx-cover-05.jpeg
-  - /img/docx-covers/docx-cover-06.jpeg
   - /img/docx-covers/docx-cover-07.jpeg
 
 
