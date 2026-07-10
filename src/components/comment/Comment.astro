@@ -14,20 +14,34 @@ const provider = commentConfig.provider ?? 'none';
 const locale = getLocaleFromUrl(Astro.url.pathname);
 let Provider = null;
 let isConfigured = false;
+let missingFields: string[] = [];
 
 if (provider === 'remark42') {
   Provider = (await import('./providers/Remark42.astro')).default;
   isConfigured = Boolean(commentConfig.remark42?.host && commentConfig.remark42?.siteId);
+  missingFields = [
+    !commentConfig.remark42?.host && 'comment.remark42.host',
+    !commentConfig.remark42?.siteId && 'comment.remark42.siteId',
+  ].filter(Boolean) as string[];
 } else if (provider === 'giscus') {
   Provider = (await import('./providers/GiscusClient.astro')).default;
   isConfigured = Boolean(commentConfig.giscus?.repo && commentConfig.giscus?.repoId && commentConfig.giscus?.categoryId);
+  missingFields = [
+    !commentConfig.giscus?.repo && 'comment.giscus.repo',
+    !commentConfig.giscus?.repoId && 'comment.giscus.repoId or PUBLIC_GISCUS_REPO_ID',
+    !commentConfig.giscus?.categoryId && 'comment.giscus.categoryId or PUBLIC_GISCUS_CATEGORY_ID',
+  ].filter(Boolean) as string[];
 } else if (provider === 'waline') {
   Provider = (await import('./providers/WalineClient.astro')).default;
   isConfigured = Boolean(commentConfig.waline?.serverURL);
+  missingFields = [!commentConfig.waline?.serverURL && 'comment.waline.serverURL'].filter(Boolean) as string[];
 } else if (provider === 'twikoo') {
   Provider = (await import('./providers/TwikooClient.astro')).default;
   isConfigured = Boolean(commentConfig.twikoo?.envId);
+  missingFields = [!commentConfig.twikoo?.envId && 'comment.twikoo.envId'].filter(Boolean) as string[];
 }
+
+const showSetupNotice = import.meta.env.DEV && provider !== 'none' && Provider && !isConfigured;
 ---
 
 {
@@ -35,6 +49,18 @@ if (provider === 'remark42') {
     <div class={cn('comments w-full', { 'z-5': christmasEnabled.get() })}>
       <p class="text-muted-foreground mb-4 text-center text-sm">{t(locale, 'comment.prompt')}</p>
       <Provider />
+    </div>
+  )
+}
+
+{
+  showSetupNotice && (
+    <div class="border-border/70 bg-muted/40 text-muted-foreground my-8 rounded-md border px-4 py-3 text-sm">
+      <p class="text-foreground mb-1 font-medium">评论系统还差一点配置。</p>
+      <p>
+        当前选择了 <code>{provider}</code>，但缺少：{missingFields.join(', ')}。如果使用 Giscus，请按{' '}
+        <code>docs/comment-setup.md</code> 填入 GitHub Discussions 生成的公开 ID。
+      </p>
     </div>
   )
 }

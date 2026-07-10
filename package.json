@@ -16,6 +16,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
+    "check:comments": "npx tsx scripts/check-comments.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "lint:fix:unssafe": "biome check --write --unsafe",

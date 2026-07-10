@@ -245,8 +245,24 @@ type ChristmasConfig = {
   };
 };
 
-// Map YAML comment config
-export const commentConfig: CommentConfig = yamlConfig.comment || {};
+// Map YAML comment config. PUBLIC_* env values make Netlify-side Giscus setup
+// possible without committing generated public IDs on every change.
+const yamlCommentConfig: CommentConfig = yamlConfig.comment || {};
+const giscusEnvConfig =
+  yamlCommentConfig.giscus && yamlCommentConfig.provider === 'giscus'
+    ? {
+        ...yamlCommentConfig.giscus,
+        repo: (import.meta.env.PUBLIC_GISCUS_REPO || yamlCommentConfig.giscus.repo) as `${string}/${string}`,
+        repoId: import.meta.env.PUBLIC_GISCUS_REPO_ID || yamlCommentConfig.giscus.repoId,
+        category: import.meta.env.PUBLIC_GISCUS_CATEGORY || yamlCommentConfig.giscus.category,
+        categoryId: import.meta.env.PUBLIC_GISCUS_CATEGORY_ID || yamlCommentConfig.giscus.categoryId,
+      }
+    : yamlCommentConfig.giscus;
+
+export const commentConfig: CommentConfig = {
+  ...yamlCommentConfig,
+  giscus: giscusEnvConfig,
+};
 
 // Content config types
 type ContentConfig = {

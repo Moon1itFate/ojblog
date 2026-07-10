@@ -33,6 +33,23 @@ comment:
 
 `repoId` 和 `categoryId` 为空时，站点会自动隐藏评论区，避免文章页显示一个不可用的评论框。
 
+也可以不改代码，直接在 Netlify 里添加环境变量，然后重新部署：
+
+```bash
+PUBLIC_GISCUS_REPO=Moon1itFate/ojblog
+PUBLIC_GISCUS_REPO_ID=R_kgDO...
+PUBLIC_GISCUS_CATEGORY=Announcements
+PUBLIC_GISCUS_CATEGORY_ID=DIC_kwDO...
+```
+
+本地检查命令：
+
+```bash
+corepack pnpm check:comments
+```
+
+如果本地没有设置环境变量，而 `config/site.yaml` 里的两个 ID 仍为空，这个命令会提示缺少哪些字段。
+
 ## 单篇文章关闭评论
 
 如果某篇文章不想开放评论，在文章 frontmatter 中添加：
