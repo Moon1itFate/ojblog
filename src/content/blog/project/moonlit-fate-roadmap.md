@@ -2,7 +2,7 @@
 title: "Moonlit Fate 的下一阶段路线图"
 description: "把个人博客、OJ Tracker、文章发布和读者互动串成一套可长期维护的系统。"
 date: 2026-06-01 10:10:00
-cover: /img/elysia/cover-01.webp
+cover: /img/docx-covers/docx-cover-04.jpeg
 tags:
   - project
   - blog

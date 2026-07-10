@@ -2,7 +2,7 @@
 title: "这个博客的文章发布流程"
 description: "把写作、构建、评论和维护权限拆开，让博客既开放交流，又保持个人内容的稳定发布。"
 date: 2026-06-01 10:35:00
-cover: /img/elysia/cover-10.webp
+cover: /img/docx-covers/docx-cover-05.jpeg
 tags:
   - project
   - blog

@@ -103,7 +103,7 @@ featuredCategories:
     description: ojblog 的设计、开发与重构记录
   - link: review
     label: 周复盘
-    image: /img/elysia/cover-10.webp
+    image: /img/docx-covers/docx-cover-07.jpeg
     description: 每周把训练信号整理成下一步行动
 
 # =============================================================================
@@ -302,6 +302,13 @@ defaultCoverList:
   - /img/elysia/cover-13.webp
   - /img/elysia/cover-14.webp
   - /img/elysia/cover-15.webp
+  - /img/docx-covers/docx-cover-01.jpeg
+  - /img/docx-covers/docx-cover-02.png
+  - /img/docx-covers/docx-cover-03.png
+  - /img/docx-covers/docx-cover-04.jpeg
+  - /img/docx-covers/docx-cover-05.jpeg
+  - /img/docx-covers/docx-cover-06.jpeg
+  - /img/docx-covers/docx-cover-07.jpeg
 
 
 # =============================================================================
