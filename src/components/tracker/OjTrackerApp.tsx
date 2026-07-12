@@ -355,6 +355,8 @@ function ContestItem({ contest }: { contest: ContestRecord }) {
 export default function OjTrackerApp() {
   const [accounts, setAccounts] = useState<TrackerAccounts>(emptyAccounts);
   const [snapshot, setSnapshot] = useState<TrackerSnapshot | null>(null);
+  const [adminToken, setAdminToken] = useState('');
+  const [cloudSnapshotLoaded, setCloudSnapshotLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -372,6 +374,23 @@ export default function OjTrackerApp() {
 
     if (savedAccounts) setAccounts({ ...emptyAccounts, ...savedAccounts });
     if (savedSnapshot) setSnapshot(savedSnapshot);
+
+    void fetch('/api/tracker/snapshot', { headers: { Accept: 'application/json' } })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as { snapshot?: unknown };
+      })
+      .then((payload) => {
+        if (!isTrackerSnapshot(payload?.snapshot)) return;
+        setSnapshot(payload.snapshot);
+        setAccounts({ ...emptyAccounts, ...payload.snapshot.accounts });
+        saveJson(ACCOUNT_STORAGE_KEY, payload.snapshot.accounts);
+        saveJson(SNAPSHOT_STORAGE_KEY, payload.snapshot);
+      })
+      .catch(() => {
+        // Keep the local snapshot available when the deployed store is unavailable.
+      })
+      .finally(() => setCloudSnapshotLoaded(true));
 
     const shouldAutoSync =
       savedAccounts &&
@@ -402,6 +421,24 @@ export default function OjTrackerApp() {
       }
       setSnapshot(nextSnapshot);
       saveJson(SNAPSHOT_STORAGE_KEY, nextSnapshot);
+
+      if (adminToken.trim()) {
+        const response = await fetch('/api/tracker/snapshot', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${adminToken.trim()}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ accounts: normalized, snapshot: nextSnapshot }),
+        });
+        const payload = (await response.json().catch(() => null)) as { snapshot?: unknown; error?: string } | null;
+        if (!response.ok || !isTrackerSnapshot(payload?.snapshot)) {
+          throw new Error(payload?.error || '本次数据已同步到当前浏览器，但写入云端快照失败。');
+        }
+        setSnapshot(payload.snapshot);
+        saveJson(SNAPSHOT_STORAGE_KEY, payload.snapshot);
+      }
 
       const connected = nextSnapshot.sources.some((source) => source.status === 'connected');
       if (!connected) {
@@ -460,6 +497,16 @@ export default function OjTrackerApp() {
               />
             </label>
           ))}
+          <label className="tracker-admin-token">
+            <span>管理员同步密钥</span>
+            <input
+              type="password"
+              value={adminToken}
+              placeholder="仅站长填写，用于更新公开快照"
+              autoComplete="off"
+              onChange={(event) => setAdminToken(event.target.value)}
+            />
+          </label>
           <button type="button" onClick={() => void handleSync()} disabled={loading}>
             <RiRefreshLine className={loading ? 'spin' : ''} />
             {loading ? '同步中' : '同步'}
@@ -468,6 +515,7 @@ export default function OjTrackerApp() {
         {snapshot && (
           <div className="sync-foot">
             <span>上次同步：{formatDate(snapshot.fetchedAt)}</span>
+            <span>{cloudSnapshotLoaded ? '云端快照已加载' : '正在读取云端快照...'}</span>
             <SourceStatusList sources={snapshot.sources} />
           </div>
         )}

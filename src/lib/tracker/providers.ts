@@ -672,16 +672,30 @@ async function collectSource<T>(
   }
 }
 
-export async function syncTrackerData(accounts: TrackerAccounts): Promise<TrackerSnapshot> {
+export interface TrackerSyncOptions {
+  server?: boolean;
+}
+
+export async function syncTrackerData(accounts: TrackerAccounts, options: TrackerSyncOptions = {}): Promise<TrackerSnapshot> {
   const normalizedAccounts = normalizeTrackerAccounts(accounts);
   const sourceTasks = trackerProviders.flatMap((provider) => {
     const handle = normalizedAccounts[provider.platform];
+    const submissionFetcher =
+      options.server && provider.platform === 'nowcoder'
+        ? fetchNowCoderSubmissionsFromPublicPage
+        : options.server && provider.platform === 'luogu'
+          ? async (userId: string) => (await fetchLuoguPracticeFromPublicPage(userId)).submissions
+          : provider.fetchSubmissions;
+    const contestFetcher =
+      options.server && provider.platform === 'luogu'
+        ? async (userId: string) => (await fetchLuoguPracticeFromPublicPage(userId)).contests
+        : provider.fetchContests;
     return [
-      provider.fetchSubmissions
-        ? collectSource(provider, 'submissions', handle, provider.fetchSubmissions)
+      submissionFetcher
+        ? collectSource(provider, 'submissions', handle, submissionFetcher)
         : Promise.resolve<{ items: OjSubmission[]; status: TrackerSourceStatus } | null>(null),
-      provider.fetchContests
-        ? collectSource(provider, 'contests', handle, provider.fetchContests)
+      contestFetcher
+        ? collectSource(provider, 'contests', handle, contestFetcher)
         : Promise.resolve<{ items: ContestRecord[]; status: TrackerSourceStatus } | null>(null),
     ];
   });
